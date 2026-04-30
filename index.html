@@ -142,6 +142,9 @@
             <a href="https://wa.me/6282371962881?text=Hai...saya%20tertarik%20dengan%20aplikasi%20yang%20bapak%20buat" target="_blank" class="inline-flex items-center justify-center gap-2 w-full py-2 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-white border border-[#25D366]/30 rounded-lg text-xs font-semibold transition-all duration-300">
                 <i class="fab fa-whatsapp text-sm"></i> Whatsapp Me
             </a>
+            <button onclick="app.openPromoModal()" class="mt-2 inline-flex items-center justify-center gap-2 w-full py-2 bg-gradient-to-r from-orange-500 to-red-600 text-white hover:from-orange-600 hover:to-red-700 shadow-lg rounded-lg text-xs font-bold transition-all duration-300 border-none">
+                <i class="fas fa-crown text-yellow-300 text-sm"></i> Dapatkan Versi PRO
+            </button>
         </div>
     </aside>
 
@@ -383,14 +386,19 @@
             <!-- MENU ADMIN (Kelola Akun) -->
             <section id="admin-panel" class="tab-content max-w-5xl mx-auto">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
-                    <div class="flex justify-between items-center mb-6 border-b pb-4">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b pb-4 gap-4">
                         <div>
                             <h3 class="text-xl font-bold text-gray-800"><i class="fas fa-users-cog text-primary mr-2"></i>Manajemen Akun Pengguna</h3>
                             <p class="text-sm text-gray-500">Tambah, edit, atau hapus akun untuk mengakses aplikasi ini.</p>
                         </div>
-                        <button onclick="app.openUserModal()" class="px-4 py-2 bg-primary hover:bg-sky-600 text-white rounded shadow-sm text-sm font-medium transition flex items-center">
-                            <i class="fas fa-plus mr-2"></i> Tambah Akun
-                        </button>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="app.syncToCloud()" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded shadow-sm text-sm font-medium transition flex items-center">
+                                <i class="fas fa-cloud-upload-alt mr-2"></i> Simpan ke Spreadsheet
+                            </button>
+                            <button onclick="app.openUserModal()" class="px-4 py-2 bg-primary hover:bg-sky-600 text-white rounded shadow-sm text-sm font-medium transition flex items-center">
+                                <i class="fas fa-plus mr-2"></i> Tambah Akun
+                            </button>
+                        </div>
                     </div>
 
                     <div class="overflow-x-auto">
@@ -490,6 +498,40 @@
             <p class="text-sm mb-4">Aplikasi ini gratis. Dukung pengembangan melalui:</p>
             <div class="bg-gray-100 p-3 rounded font-mono text-lg font-bold mb-4">BRI: 009801023322533<br><span class="text-xs text-gray-500 font-sans">A.n SUPRIYADI</span></div>
             <button onclick="app.closeDonasiModal()" class="w-full py-2 bg-gray-200 rounded">Tutup</button>
+        </div>
+    </div>
+
+    <!-- Modal Promo PRO -->
+    <div id="promo-modal" class="fixed inset-0 bg-black/70 z-[110] hidden flex items-center justify-center backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform scale-95 transition-transform duration-300 overflow-hidden" id="promo-content">
+            <div class="bg-gradient-to-br from-blue-700 to-primary p-6 text-center text-white relative">
+                <div class="absolute top-3 right-3">
+                    <button onclick="app.closePromoModal()" class="text-white/70 hover:text-white transition"><i class="fas fa-times text-xl"></i></button>
+                </div>
+                <i class="fas fa-crown text-5xl mb-3 text-yellow-300 drop-shadow-md"></i>
+                <h3 class="text-2xl font-bold">Upgrade ke Versi PRO!</h3>
+                <p class="text-blue-100 text-sm mt-1">Dapatkan fitur eksklusif dan dukungan prioritas untuk sekolah Anda.</p>
+            </div>
+            <div class="p-6">
+                <div class="text-center mb-6 text-gray-700 text-sm font-medium px-4 py-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    Untuk informasi akun silakan transfer sebesar <br><span class="text-xl font-bold text-red-600">Rp. 15.000</span><br> ke nomor rekening di bawah ini.
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center mb-6 shadow-inner">
+                    <p class="text-xs text-gray-500 uppercase tracking-wider mb-1 font-bold">Transfer Pembayaran</p>
+                    <div class="flex items-center justify-center gap-2 mb-1">
+                        <i class="fas fa-building-columns text-blue-800"></i>
+                        <span class="font-bold text-blue-800 text-lg">Bank BRI</span>
+                    </div>
+                    <div class="font-mono text-2xl font-bold tracking-widest text-gray-800 my-1 bg-white border border-gray-200 py-2 rounded-lg">009801023322533</div>
+                    <div class="text-sm font-semibold text-gray-600 mt-2">Atas Nama: <span class="text-gray-800 font-bold">SUPRIYADI</span></div>
+                </div>
+                <div class="flex flex-col gap-3">
+                    <a href="https://wa.me/6282371962881?text=Halo%20Pak%20Supriyadi,%20saya%20tertarik%20untuk%20upgrade%20aplikasi%20EduAnalisa%20ke%20versi%20PRO.%20Saya%20sudah%20melakukan%20transfer..." target="_blank" class="w-full py-3.5 bg-[#25D366] hover:bg-[#20b858] text-white font-bold rounded-xl shadow-lg transition text-center flex items-center justify-center gap-2 text-base">
+                        <i class="fab fa-whatsapp text-xl"></i> Konfirmasi Pembayaran
+                    </a>
+                    <button onclick="app.closePromoModal()" class="w-full py-2 text-gray-500 hover:text-gray-800 font-medium text-sm transition">Nanti Saja</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -606,6 +648,13 @@
                 this.updateDashboard();
 
                 document.getElementById('loading-overlay').classList.add('hidden');
+
+                // Tampilkan Popup Penawaran PRO otomatis setelah 2 detik
+                setTimeout(() => {
+                    if (!sessionStorage.getItem('eduPromoSeen')) {
+                        this.openPromoModal();
+                    }
+                }, 2000);
             },
 
             // --- SISTEM CLOUD SPREADSHEET ---
@@ -683,6 +732,13 @@
                 this.saveToSpreadsheet();
             },
             
+            async syncToCloud() {
+                showToast("Menyimpan ke Spreadsheet...");
+                this.saveDataLocally();
+                await this.saveToSpreadsheet();
+                showToast("Data Akun berhasil tersimpan ke Spreadsheet!");
+            },
+
             resetAllData() {
                 this.showConfirm("Reset Data", "Apakah Anda yakin ingin menghapus semua data analisis? (Akun login tidak akan terhapus)", () => {
                     const tempUsers = this.state.users; 
@@ -949,9 +1005,24 @@
             },
 
             // ================== FUNGSI CORE APLIKASI LAINNYA ==================
-            openDonasiModal() { document.getElementById('donasi-modal').classList.remove('hidden'); document.getElementById('donasi-modal').classList.remove('opacity-0'); },
+            openDonasiModal() { document.getElementById('donasi-modal').classList.remove('hidden'); void document.getElementById('donasi-modal').offsetWidth; document.getElementById('donasi-modal').classList.remove('opacity-0'); },
             closeDonasiModal() { document.getElementById('donasi-modal').classList.add('opacity-0'); setTimeout(() => document.getElementById('donasi-modal').classList.add('hidden'), 300); },
             
+            // FUNGSI PROMO MODAL
+            openPromoModal() {
+                const m = document.getElementById('promo-modal');
+                const c = document.getElementById('promo-content');
+                m.classList.remove('hidden'); void m.offsetWidth;
+                m.classList.remove('opacity-0'); c.classList.remove('scale-95');
+            },
+            closePromoModal() {
+                const m = document.getElementById('promo-modal');
+                const c = document.getElementById('promo-content');
+                m.classList.add('opacity-0'); c.classList.add('scale-95');
+                setTimeout(() => m.classList.add('hidden'), 300);
+                sessionStorage.setItem('eduPromoSeen', 'true'); // Tandai agar tidak muncul terus menerus
+            },
+
             generateEmptyGrids() {
                 if(this.state.kunci.length !== this.state.config.jmlSoal) {
                     this.state.kunci = Array.from({length: this.state.config.jmlSoal}, (_, i) => ({ no: i + 1, tipe: 'PG', jawaban: '' }));
