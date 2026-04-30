@@ -686,13 +686,20 @@
             async loadSpreadsheetData() {
                 if (!SCRIPT_URL) return;
                 try {
-                    document.getElementById('cloud-text').innerText = "Syncing...";
+                    document.getElementById('cloud-text').innerText = "Syncing Accounts...";
                     const response = await fetch(SCRIPT_URL + "?action=load");
                     const data = await response.json();
                     
                     if (data.status === 'success' && data.payload) {
                         const cloudData = JSON.parse(data.payload);
-                        this.state = cloudData;
+                        
+                        // PENTING: Hanya timpa array 'users' agar data analisis di perangkat ini tidak hilang/tertimpa
+                        if (cloudData.users && Array.isArray(cloudData.users)) {
+                            this.state.users = cloudData.users;
+                        } else if (cloudData.identitas) {
+                            // Backward compatibility (Jika spreadsheet lama masih menyimpan format lama full data)
+                            if (cloudData.users) this.state.users = cloudData.users;
+                        }
                         
                         // Buat akun default jika dari cloud kosong
                         if (!this.state.users || this.state.users.length === 0) {
@@ -701,7 +708,7 @@
                                 { username: 'user1', password: '123', role: 'user' }
                             ];
                         }
-                        this.saveDataLocally(); // Update backup lokal
+                        this.saveDataLocally(); // Update backup lokal dengan akun terbaru
                     }
                     document.getElementById('cloud-text').innerText = "Online";
                 } catch (error) {
@@ -716,8 +723,11 @@
             async saveToSpreadsheet() {
                 if (!SCRIPT_URL) return;
                 try {
-                    document.getElementById('cloud-text').innerText = "Saving...";
-                    const postData = { action: 'saveState', payload: JSON.stringify(this.state) };
+                    document.getElementById('cloud-text').innerText = "Saving Accounts...";
+                    // PENTING: Hanya kirim data 'users' ke Cloud Spreadsheet
+                    const payloadData = { users: this.state.users };
+                    const postData = { action: 'saveState', payload: JSON.stringify(payloadData) };
+                    
                     await fetch(SCRIPT_URL, {
                         method: 'POST',
                         body: JSON.stringify(postData),
@@ -752,13 +762,12 @@
             },
 
             saveData() { 
-                // Simpan lokal sekaligus kirim ke Cloud Spreadsheet
+                // HANYA Simpan ke lokal (Memori Browser) agar aplikasi bisa dipakai bersamaan beda data
                 this.saveDataLocally();
-                this.saveToSpreadsheet();
             },
             
             async syncToCloud() {
-                showToast("Menyimpan ke Spreadsheet...");
+                showToast("Menyimpan data akun ke Spreadsheet...");
                 this.saveDataLocally();
                 await this.saveToSpreadsheet();
                 showToast("Data Akun berhasil tersimpan ke Spreadsheet!");
@@ -766,9 +775,9 @@
 
             resetAllData() {
                 this.showConfirm("Reset Data", "Apakah Anda yakin ingin menghapus semua data identitas ujian, kunci jawaban, dan jawaban siswa? (Akun login tetap aman)", async () => {
-                    // Munculkan layar loading agar user menunggu proses sinkronisasi penghapusan ke Cloud
+                    // Munculkan layar loading agar user menunggu proses
                     document.getElementById('loading-overlay').classList.remove('hidden');
-                    document.getElementById('loading-text').innerText = "Menghapus & Mereset Data...";
+                    document.getElementById('loading-text').innerText = "Mereset Data Lokal...";
                     
                     const tempUsers = this.state.users; 
                     this.state = {
@@ -779,10 +788,9 @@
                     };
                     
                     this.generateEmptyGrids();
-                    this.saveDataLocally(); // Reset di penyimpanan lokal HP/Laptop
-                    await this.saveToSpreadsheet(); // TUNGGU hingga reset selesai dieksekusi di Spreadsheet
+                    this.saveDataLocally(); // Reset HANYA di penyimpanan lokal HP/Laptop
                     
-                    location.reload(); // Baru refresh halaman setelah cloud dipastikan bersih
+                    location.reload(); // Langsung refresh halaman tanpa kirim perintah reset ke Cloud
                 });
             },
 
@@ -1019,7 +1027,8 @@
                     showToast("Akun baru ditambahkan!");
                 }
                 
-                this.saveData();
+                this.saveDataLocally();
+                this.saveToSpreadsheet(); // Otomatis simpan perubahan akun ke cloud
                 this.renderUserAdmin();
                 this.closeUserModal();
             },
@@ -1030,7 +1039,8 @@
                 
                 this.showConfirm("Hapus Akun", `Yakin ingin menghapus akun "${u.username}"?`, () => {
                     this.state.users.splice(idx, 1);
-                    this.saveData();
+                    this.saveDataLocally();
+                    this.saveToSpreadsheet(); // Otomatis simpan penghapusan akun ke cloud
                     this.renderUserAdmin();
                     showToast("Akun berhasil dihapus.");
                 });
