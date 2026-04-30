@@ -225,8 +225,23 @@
                             <div class="space-y-4">
                                 <div><label class="block text-sm font-medium text-gray-700 mb-1">Nama Sekolah</label><input type="text" id="in-sekolah" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none" required></div>
                                 <div class="grid grid-cols-2 gap-4">
-                                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Jenjang</label><select id="in-jenjang" class="w-full px-4 py-2 border rounded-lg"><option value="SD">SD/MI</option><option value="SMP">SMP/MTs</option></select></div>
-                                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Jenis Tes</label><select id="in-jenis" class="w-full px-4 py-2 border rounded-lg"><option value="STS">STS</option><option value="SAS">SAS</option><option value="US">US</option><option value="Try Out">Try Out</option></select></div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Jenjang</label>
+                                        <select id="in-jenjang" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none" onchange="app.updateKelasOptions()">
+                                            <option value="SD">SD/MI</option>
+                                            <option value="SMP">SMP/MTs</option>
+                                            <option value="SMA">SMA/SMK/MA</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Tes</label>
+                                        <select id="in-jenis" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                                            <option value="STS">STS</option>
+                                            <option value="SAS">SAS</option>
+                                            <option value="US">US</option>
+                                            <option value="Try Out">Try Out</option>
+                                        </select>
+                                    </div>
                                 </div>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div><label class="block text-sm font-medium text-gray-700 mb-1">Tahun Pelajaran</label><input type="text" id="in-tahun" class="w-full px-4 py-2 border rounded-lg" required></div>
@@ -235,7 +250,11 @@
                             </div>
                             <div class="space-y-4">
                                 <div><label class="block text-sm font-medium text-gray-700 mb-1">Mata Pelajaran</label><input type="text" id="in-mapel" class="w-full px-4 py-2 border rounded-lg" required></div>
-                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Kelas</label><input type="text" id="in-kelas" class="w-full px-4 py-2 border rounded-lg" required></div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Kelas</label>
+                                    <input type="text" list="list-kelas" id="in-kelas" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none" required placeholder="Pilih atau ketik kelas...">
+                                    <datalist id="list-kelas"></datalist>
+                                </div>
                                 <div class="grid grid-cols-2 gap-4 bg-blue-50 p-4 rounded-lg border border-blue-100 mt-2">
                                     <div><label class="block text-sm font-bold text-blue-800 mb-1">Jml. Siswa (N)</label><input type="number" id="in-jmlsiswa" min="5" class="w-full px-4 py-2 border rounded-lg font-bold" required></div>
                                     <div><label class="block text-sm font-bold text-blue-800 mb-1">Jml. Soal (K)</label><input type="number" id="in-jmlsoal" min="5" class="w-full px-4 py-2 border rounded-lg font-bold" required></div>
@@ -271,6 +290,9 @@
                             <button onclick="document.getElementById('upload-kunci-excel').click()" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded shadow flex items-center transition">
                                 <i class="fas fa-upload mr-2"></i> Import Excel
                             </button>
+                            <button onclick="app.clearKunci()" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded shadow flex items-center transition">
+                                <i class="fas fa-trash mr-2"></i> Hapus Data
+                            </button>
                             <input type="file" id="upload-kunci-excel" accept=".xlsx, .xls" class="hidden" onchange="app.importKunciExcel(event)">
                         </div>
                     </div>
@@ -292,6 +314,9 @@
                             </button>
                             <button onclick="document.getElementById('upload-jawaban-excel').click()" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded shadow flex items-center transition">
                                 <i class="fas fa-upload mr-2"></i> Import Excel
+                            </button>
+                            <button onclick="app.clearJawaban()" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded shadow flex items-center transition">
+                                <i class="fas fa-trash mr-2"></i> Hapus Data
                             </button>
                             <input type="file" id="upload-jawaban-excel" accept=".xlsx, .xls" class="hidden" onchange="app.importJawabanExcel(event)">
                         </div>
@@ -740,7 +765,11 @@
             },
 
             resetAllData() {
-                this.showConfirm("Reset Data", "Apakah Anda yakin ingin menghapus semua data analisis? (Akun login tidak akan terhapus)", () => {
+                this.showConfirm("Reset Data", "Apakah Anda yakin ingin menghapus semua data identitas ujian, kunci jawaban, dan jawaban siswa? (Akun login tetap aman)", async () => {
+                    // Munculkan layar loading agar user menunggu proses sinkronisasi penghapusan ke Cloud
+                    document.getElementById('loading-overlay').classList.remove('hidden');
+                    document.getElementById('loading-text').innerText = "Menghapus & Mereset Data...";
+                    
                     const tempUsers = this.state.users; 
                     this.state = {
                         identitas: { sekolah: '', jenjang: 'SD', tahun: '', semester: 'Ganjil', jenis: 'STS', mapel: '', kelas: '', guru: '', tempatTanggal: '', kepalaSekolah: '', nipKepsek: '', nipGuru: '' },
@@ -748,9 +777,12 @@
                         kunci: [], jawabanSiswa: [],
                         users: tempUsers 
                     };
+                    
                     this.generateEmptyGrids();
-                    this.saveData(); // Menghapus data di Cloud juga (kecuali akun)
-                    location.reload();
+                    this.saveDataLocally(); // Reset di penyimpanan lokal HP/Laptop
+                    await this.saveToSpreadsheet(); // TUNGGU hingga reset selesai dieksekusi di Spreadsheet
+                    
+                    location.reload(); // Baru refresh halaman setelah cloud dipastikan bersih
                 });
             },
 
@@ -1032,8 +1064,31 @@
                 }
             },
 
+            updateKelasOptions() {
+                const jenjang = document.getElementById('in-jenjang').value;
+                const datalist = document.getElementById('list-kelas');
+                if(!datalist) return;
+                
+                datalist.innerHTML = '';
+                let options = [];
+                if(jenjang === 'SD') options = ['1', '2', '3', '4', '5', '6'];
+                else if(jenjang === 'SMP') options = ['7', '8', '9'];
+                else if(jenjang === 'SMA') options = ['10', '11', '12'];
+                
+                options.forEach(k => {
+                    datalist.innerHTML += `<option value="${k}">Kelas ${k}</option>`;
+                });
+            },
+
             fillFormIdentitas() {
                 const id = this.state.identitas; const conf = this.state.config;
+                
+                // Set nilai jenjang dan update opsi kelas yang sesuai sebelum mengisi nilai kelas
+                if (id.jenjang && document.getElementById('in-jenjang')) {
+                    document.getElementById('in-jenjang').value = id.jenjang;
+                }
+                this.updateKelasOptions();
+
                 ['sekolah','jenjang','tahun','semester','jenis','mapel','kelas','guru','tempatTanggal','kepalaSekolah','nipKepsek','nipGuru'].forEach(k => {
                     if(document.getElementById('in-'+k) && id[k]) document.getElementById('in-'+k).value = id[k];
                 });
@@ -1062,7 +1117,7 @@
                 const tbody = document.getElementById('table-kunci-body'); tbody.innerHTML = '';
                 this.state.kunci.forEach((k, i) => {
                     tbody.innerHTML += `<tr class="border-b"><td class="px-6 py-2 text-center">${i + 1}</td>
-                        <td class="px-6 py-2"><select class="p-1 border rounded w-full key-tipe"><option value="PG" ${k.tipe==='PG'?'selected':''}>Pilihan Ganda</option><option value="Isian" ${k.tipe==='Isian'?'selected':''}>Isian</option></select></td>
+                        <td class="px-6 py-2"><select class="p-1 border rounded w-full key-tipe"><option value="PG" ${k.tipe==='PG'?'selected':''}>Pilihan Ganda</option><option value="Isian" ${k.tipe==='Isian'?'selected':''}>Isian</option><option value="Esai" ${k.tipe==='Esai'?'selected':''}>Esai</option></select></td>
                         <td class="px-6 py-2"><input type="text" class="p-1 border rounded w-full uppercase key-val" value="${k.jawaban}"></td></tr>`;
                 });
             },
@@ -1073,13 +1128,18 @@
                 this.saveData(); showToast("Kunci Disimpan!");
             },
 
+            clearKunci() {
+                this.showConfirm("Hapus Kunci Jawaban", "Apakah Anda yakin ingin mengosongkan semua data kunci jawaban?", () => {
+                    this.state.kunci = Array.from({length: this.state.config.jmlSoal}, (_, i) => ({ no: i + 1, tipe: 'PG', jawaban: '' }));
+                    this.renderKunciTable();
+                    this.saveData();
+                    showToast("Data kunci jawaban berhasil dikosongkan.");
+                });
+            },
+
             downloadTemplateKunci() {
                 const jmlSoal = this.state.config.jmlSoal;
                 let data = [
-                    ["FORMAT KUNCI JAWABAN - EDUANALISA"],
-                    ["* Kolom 'Jenis Soal' isi dengan 'PG' atau 'Isian'"],
-                    ["* Kolom 'Kunci Jawaban' isi dengan huruf A/B/C/D (untuk PG) atau angka bobot maksimal (untuk Isian)"],
-                    [],
                     ["No", "Jenis Soal", "Kunci Jawaban"]
                 ];
 
@@ -1135,7 +1195,8 @@
                             if (no > this.state.config.jmlSoal) continue;
 
                             let tipe = row[1] ? row[1].toString().trim() : 'PG';
-                            if(tipe.toLowerCase().includes('isian') || tipe.toLowerCase().includes('esai')) tipe = 'Isian';
+                            if(tipe.toLowerCase().includes('esai')) tipe = 'Esai';
+                            else if(tipe.toLowerCase().includes('isian')) tipe = 'Isian';
                             else tipe = 'PG';
                             
                             let jawaban = row[2] ? row[2].toString().trim().toUpperCase() : '';
@@ -1183,16 +1244,20 @@
                 this.saveData(); showToast("Jawaban Disimpan!");
             },
 
+            clearJawaban() {
+                this.showConfirm("Hapus Jawaban Siswa", "Apakah Anda yakin ingin mengosongkan semua data jawaban siswa?", () => {
+                    this.state.jawabanSiswa = Array.from({length: this.state.config.jmlSiswa}, (_, i) => ({ nama: `Siswa ${i + 1}`, jawaban: Array(this.state.config.jmlSoal).fill('') }));
+                    this.renderJawabanTable();
+                    this.saveData();
+                    showToast("Data jawaban siswa berhasil dikosongkan.");
+                });
+            },
+
             downloadTemplateJawaban() {
                 const jmlSoal = this.state.config.jmlSoal;
                 const jmlSiswa = this.state.config.jmlSiswa;
                 
-                let headerData = [
-                    ["FORMAT JAWABAN SISWA - EDUANALISA"],
-                    ["* Isikan nama siswa pada kolom 'Nama Siswa'"],
-                    ["* Isikan jawaban siswa (A/B/C/D atau nilai esai) pada kolom angka (1, 2, 3, dst.)"],
-                    []
-                ];
+                let headerData = [];
 
                 let tableHeader = ["No", "Nama Siswa"];
                 for(let i = 1; i <= jmlSoal; i++) {
