@@ -219,7 +219,7 @@
             <section id="input-data" class="tab-content max-w-4xl mx-auto">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
                     <form id="form-identitas" onsubmit="event.preventDefault(); app.saveIdentity();">
-                        <!-- Form Identitas (Sama seperti sebelumnya) -->
+                        <!-- Form Identitas -->
                         <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Identitas Ujian & Sekolah</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                             <div class="space-y-4">
@@ -269,7 +269,10 @@
                                 <div><label class="block text-sm font-medium text-gray-700 mb-1">NIP Kepala Sekolah</label><input type="text" id="in-nipKepsek" class="w-full px-4 py-2 border rounded-lg"></div>
                             </div>
                             <div class="space-y-4">
-                                <div><label class="block text-sm font-medium text-gray-700 mb-1">Nama Wali Kelas / Guru</label><input type="text" id="in-guru" class="w-full px-4 py-2 border rounded-lg" required></div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Wali Kelas / Guru</label>
+                                    <input type="text" id="in-guru" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none" required>
+                                </div>
                                 <div><label class="block text-sm font-medium text-gray-700 mb-1">NIP Wali Kelas / Guru</label><input type="text" id="in-nipGuru" class="w-full px-4 py-2 border rounded-lg"></div>
                             </div>
                         </div>
@@ -362,7 +365,6 @@
 
                     <!-- Dashboard Statistik Singkat -->
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="analisis-stats">
-                        <!-- Diisi via JS -->
                         <div class="bg-gray-50 p-4 border rounded-xl text-center"><p class="text-gray-400 text-sm">Menunggu Data</p></div>
                     </div>
 
@@ -433,6 +435,7 @@
                                     <th class="px-4 py-3 text-center w-12">No</th>
                                     <th class="px-4 py-3">Username</th>
                                     <th class="px-4 py-3">Password</th>
+                                    <th class="px-4 py-3">Nama Lengkap Guru</th>
                                     <th class="px-4 py-3">Role</th>
                                     <th class="px-4 py-3 text-center w-32">Aksi</th>
                                 </tr>
@@ -500,6 +503,10 @@
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Password</label>
                     <input type="text" id="in-user-pass" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nama Lengkap Guru</label>
+                    <input type="text" id="in-user-fullname" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none" placeholder="Contoh: Riami, S.Pd." required>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Role Akun</label>
@@ -640,7 +647,7 @@
 
         function showToast(message, isError = false) {
             const toast = document.getElementById('toast');
-            if (!toast) return; // Mencegah error jika elemen tidak ditemukan
+            if (!toast) return; 
             toast.innerText = message;
             toast.style.backgroundColor = isError ? '#ef4444' : '#10b981';
             toast.classList.add('show');
@@ -656,7 +663,7 @@
             },
             analysisResult: null, studentGrades: [],
             currentUser: null, 
-            charts: {}, // Object untuk menyimpan instance chart js
+            charts: {}, 
 
             async init() {
                 document.getElementById('loading-overlay').classList.remove('hidden');
@@ -697,18 +704,18 @@
                         if (cloudData.users && Array.isArray(cloudData.users)) {
                             this.state.users = cloudData.users;
                         } else if (cloudData.identitas) {
-                            // Backward compatibility (Jika spreadsheet lama masih menyimpan format lama full data)
                             if (cloudData.users) this.state.users = cloudData.users;
                         }
                         
                         // Buat akun default jika dari cloud kosong
                         if (!this.state.users || this.state.users.length === 0) {
                             this.state.users = [
-                                { username: 'supriyadi', password: '291188', role: 'admin' },
-                                { username: 'user1', password: '123', role: 'user' }
+                                { username: 'supriyadi', password: '291188', role: 'admin', namaGuru: 'Supriyadi, S. Pd. Gr' },
+                                { username: 'riami', password: '123', role: 'user', namaGuru: 'Riami, S. Pd.' },
+                                { username: 'user1', password: '123', role: 'user', namaGuru: 'Guru Contoh, S.Pd.' }
                             ];
                         }
-                        this.saveDataLocally(); // Update backup lokal dengan akun terbaru
+                        this.saveDataLocally(); 
                     }
                     document.getElementById('cloud-text').innerText = "Online";
                 } catch (error) {
@@ -724,14 +731,13 @@
                 if (!SCRIPT_URL) return;
                 try {
                     document.getElementById('cloud-text').innerText = "Saving Accounts...";
-                    // PENTING: Hanya kirim data 'users' ke Cloud Spreadsheet
                     const payloadData = { users: this.state.users };
                     const postData = { action: 'saveState', payload: JSON.stringify(payloadData) };
                     
                     await fetch(SCRIPT_URL, {
                         method: 'POST',
                         body: JSON.stringify(postData),
-                        headers: { "Content-Type": "text/plain;charset=utf-8" } // Bypass preflight
+                        headers: { "Content-Type": "text/plain;charset=utf-8" } 
                     });
                     document.getElementById('cloud-text').innerText = "Online";
                 } catch (error) {
@@ -751,8 +757,9 @@
 
                 if (!this.state.users || this.state.users.length === 0) {
                     this.state.users = [
-                        { username: 'supriyadi', password: '291188', role: 'admin' },
-                        { username: 'user1', password: '123', role: 'user' }
+                        { username: 'supriyadi', password: '291188', role: 'admin', namaGuru: 'Supriyadi, S. Pd. Gr' },
+                        { username: 'riami', password: '123', role: 'user', namaGuru: 'Riami, S. Pd.' },
+                        { username: 'user1', password: '123', role: 'user', namaGuru: 'Guru Contoh, S.Pd.' }
                     ];
                 }
             },
@@ -762,7 +769,6 @@
             },
 
             saveData() { 
-                // HANYA Simpan ke lokal (Memori Browser) agar aplikasi bisa dipakai bersamaan beda data
                 this.saveDataLocally();
             },
             
@@ -775,7 +781,6 @@
 
             resetAllData() {
                 this.showConfirm("Reset Data", "Apakah Anda yakin ingin menghapus semua data identitas ujian, kunci jawaban, dan jawaban siswa? (Akun login tetap aman)", async () => {
-                    // Munculkan layar loading agar user menunggu proses
                     document.getElementById('loading-overlay').classList.remove('hidden');
                     document.getElementById('loading-text').innerText = "Mereset Data Lokal...";
                     
@@ -788,9 +793,9 @@
                     };
                     
                     this.generateEmptyGrids();
-                    this.saveDataLocally(); // Reset HANYA di penyimpanan lokal HP/Laptop
+                    this.saveDataLocally(); 
                     
-                    location.reload(); // Langsung refresh halaman tanpa kirim perintah reset ke Cloud
+                    location.reload(); 
                 });
             },
 
@@ -802,7 +807,6 @@
                 const btnOk = document.getElementById('btn-confirm-ok');
                 const btnCancel = document.getElementById('btn-confirm-cancel');
                 
-                // Hapus event listener lama dengan clone node agar tidak menumpuk
                 const newBtnOk = btnOk.cloneNode(true);
                 btnOk.parentNode.replaceChild(newBtnOk, btnOk);
                 const newBtnCancel = btnCancel.cloneNode(true);
@@ -830,7 +834,6 @@
 
             // ================== SISTEM AUTENTIKASI (LOGIN) ==================
             initAuth() {
-                // Cek Session Storage apakah user sudah login sebelumnya
                 const activeSession = sessionStorage.getItem('eduAuthUser');
                 if (activeSession) {
                     this.currentUser = JSON.parse(activeSession);
@@ -868,15 +871,25 @@
                 const u = document.getElementById('in-login-user').value.trim();
                 const p = document.getElementById('in-login-pass').value;
                 
-                // Cari kecocokan di database user
                 const userMatch = this.state.users.find(x => x.username === u && x.password === p);
                 
                 if (userMatch) {
-                    this.currentUser = { username: userMatch.username, role: userMatch.role };
+                    this.currentUser = { username: userMatch.username, role: userMatch.role, namaGuru: userMatch.namaGuru || '' };
                     sessionStorage.setItem('eduAuthUser', JSON.stringify(this.currentUser));
                     
+                    // PENGISIAN OTOMATIS: Isi nama guru di identitas ujian
+                    if (userMatch.namaGuru) {
+                        this.state.identitas.guru = userMatch.namaGuru;
+                        const inputGuru = document.getElementById('in-guru');
+                        if (inputGuru) {
+                            inputGuru.value = userMatch.namaGuru;
+                        }
+                    }
+
                     this.closeLoginModal();
                     this.updateAuthUI();
+                    this.saveData(); // Simpan perubahan identitas ke localStorage
+                    this.updateDashboard();
                     showToast(`Selamat datang, ${userMatch.username}! Akses menu terbuka.`);
                 } else {
                     document.getElementById('msg-login-err').classList.remove('hidden');
@@ -886,10 +899,18 @@
             logout() {
                 this.currentUser = null;
                 sessionStorage.removeItem('eduAuthUser');
+                
+                // Kembalikan nama guru ke data kosong dan hilangkan status readonly
+                this.state.identitas.guru = '';
+                const inputGuru = document.getElementById('in-guru');
+                if (inputGuru) {
+                    inputGuru.value = '';
+                }
+
                 this.updateAuthUI();
+                this.saveData();
                 showToast("Berhasil Logout. Menu kembali terkunci.");
                 
-                // Jika sedang di tab terkunci, lempar ke dashboard
                 const activeTab = document.querySelector('.tab-content.active').id;
                 if (RESTRICTED_TABS.includes(activeTab) || activeTab === 'admin-panel') {
                     switchTab('dashboard');
@@ -903,26 +924,23 @@
                 const lockIcons = document.querySelectorAll('.lock-icon');
                 const welcomeAlert = document.getElementById('welcome-alert');
                 
-                // Admin Nav
                 const navAdminSep = document.getElementById('nav-admin-separator');
                 const navAdminBtn = document.getElementById('nav-admin-btn');
                 const navMobileAdmin = document.getElementById('nav-mobile-admin');
+                const inputGuru = document.getElementById('in-guru');
 
                 if (this.currentUser) {
-                    // Tampilan jika SUDAH LOGIN
                     btnAuthTxt.innerText = `Logout (${this.currentUser.username})`;
                     btnAuthHeader.classList.replace('bg-gray-100', 'bg-blue-50');
                     btnAuthHeader.classList.replace('text-gray-700', 'text-primary');
                     iconAuth.className = "fas fa-sign-out-alt sm:mr-2";
-                    welcomeAlert.classList.add('hidden'); // Sembunyikan alert peringatan di dashboard
+                    welcomeAlert.classList.add('hidden'); 
                     
-                    // Hilangkan Icon Gembok di menu
                     lockIcons.forEach(icon => {
                         icon.classList.add('opacity-0');
                         setTimeout(() => icon.classList.add('hidden'), 300);
                     });
 
-                    // Cek jika ia Admin, Tampilkan menu Kelola Akun
                     if (this.currentUser.role === 'admin') {
                         navAdminSep.classList.remove('hidden');
                         navAdminBtn.classList.remove('hidden');
@@ -933,24 +951,39 @@
                         navAdminBtn.classList.add('hidden');
                         navMobileAdmin.classList.add('hidden');
                     }
+
+                    // KUNCI kolom input Nama Guru di Identitas Ujian
+                    if (inputGuru) {
+                        inputGuru.readOnly = true;
+                        inputGuru.classList.add('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
+                        inputGuru.setAttribute('title', 'Nama guru terisi otomatis dari akun login Anda');
+                        if (this.currentUser.namaGuru) {
+                            inputGuru.value = this.currentUser.namaGuru;
+                            this.state.identitas.guru = this.currentUser.namaGuru;
+                        }
+                    }
                 } else {
-                    // Tampilan jika BELUM LOGIN (Terkunci)
                     btnAuthTxt.innerText = "Login Sistem";
                     btnAuthHeader.classList.replace('bg-blue-50', 'bg-gray-100');
                     btnAuthHeader.classList.replace('text-primary', 'text-gray-700');
                     iconAuth.className = "fas fa-sign-in-alt sm:mr-2";
-                    welcomeAlert.classList.remove('hidden'); // Tampilkan peringatan merah
+                    welcomeAlert.classList.remove('hidden'); 
                     
-                    // Munculkan Icon Gembok di menu yang terkunci
                     lockIcons.forEach(icon => {
                         icon.classList.remove('hidden');
                         setTimeout(() => icon.classList.remove('opacity-0'), 10);
                     });
 
-                    // Sembunyikan menu admin
                     navAdminSep.classList.add('hidden');
                     navAdminBtn.classList.add('hidden');
                     navMobileAdmin.classList.add('hidden');
+
+                    // BUKA kembali kolom input Nama Guru jika belum login
+                    if (inputGuru) {
+                        inputGuru.readOnly = false;
+                        inputGuru.classList.remove('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
+                        inputGuru.removeAttribute('title');
+                    }
                 }
             },
 
@@ -959,12 +992,12 @@
                 const tbody = document.getElementById('table-users-body');
                 tbody.innerHTML = '';
                 this.state.users.forEach((u, i) => {
-                    const isSuperadmin = (u.username === 'supriyadi'); // Mencegah penghapusan superadmin utama
+                    const isSuperadmin = (u.username === 'supriyadi'); 
                     const roleBadge = u.role === 'admin' ? '<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold"><i class="fas fa-shield-alt mr-1"></i> Admin</span>' : '<span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold"><i class="fas fa-user mr-1"></i> User</span>';
                     
                     const actionBtns = isSuperadmin ? 
                         `<span class="text-xs text-gray-400 italic">Akun Permanen</span>` : 
-                        `<button onclick="app.editUser(${i})" class="text-blue-500 hover:text-blue-700 mr-3" title="Edit"><i class="fas fa-edit"></i></button>
+                        `<button onclick="app.editUser(${i})" class="text-blue-500 hover:text-blue-700 mr-3 animate" title="Edit"><i class="fas fa-edit"></i></button>
                          <button onclick="app.deleteUser(${i})" class="text-red-500 hover:text-red-700" title="Hapus"><i class="fas fa-trash"></i></button>`;
 
                     tbody.innerHTML += `
@@ -972,6 +1005,7 @@
                             <td class="px-4 py-2 text-center">${i + 1}</td>
                             <td class="px-4 py-2 font-semibold text-gray-800">${u.username}</td>
                             <td class="px-4 py-2 font-mono text-gray-500">${u.password}</td>
+                            <td class="px-4 py-2 text-gray-700 font-medium">${u.namaGuru || '-'}</td>
                             <td class="px-4 py-2">${roleBadge}</td>
                             <td class="px-4 py-2 text-center">${actionBtns}</td>
                         </tr>
@@ -982,23 +1016,27 @@
             openUserModal(idx = -1) {
                 const m = document.getElementById('user-modal'); const c = document.getElementById('user-content');
                 if (idx > -1) {
-                    // Edit Mode
                     const u = this.state.users[idx];
                     document.getElementById('user-modal-title').innerText = "Edit Akun";
                     document.getElementById('in-user-idx').value = idx;
                     document.getElementById('in-user-name').value = u.username;
                     document.getElementById('in-user-pass').value = u.password;
+                    document.getElementById('in-user-fullname').value = u.namaGuru || '';
                     document.getElementById('in-user-role').value = u.role;
                 } else {
-                    // Add Mode
                     document.getElementById('user-modal-title').innerText = "Tambah Akun Baru";
                     document.getElementById('in-user-idx').value = -1;
                     document.getElementById('in-user-name').value = '';
                     document.getElementById('in-user-pass').value = '';
+                    document.getElementById('in-user-fullname').value = '';
                     document.getElementById('in-user-role').value = 'user';
                 }
                 m.classList.remove('hidden'); void m.offsetWidth;
                 m.classList.remove('opacity-0'); c.classList.remove('scale-95');
+            },
+
+            editUser(idx) {
+                this.openUserModal(idx);
             },
 
             closeUserModal() {
@@ -1011,36 +1049,36 @@
                 const idx = parseInt(document.getElementById('in-user-idx').value);
                 const name = document.getElementById('in-user-name').value.trim();
                 const pass = document.getElementById('in-user-pass').value;
+                const fullname = document.getElementById('in-user-fullname').value.trim();
                 const role = document.getElementById('in-user-role').value;
 
-                if(name === '' || pass === '') { showToast("Data tidak boleh kosong!", true); return; }
+                if(name === '' || pass === '' || fullname === '') { showToast("Data tidak boleh kosong!", true); return; }
                 
-                // Cek duplikasi username
                 const dup = this.state.users.findIndex(u => u.username.toLowerCase() === name.toLowerCase());
                 if(dup !== -1 && dup !== idx) { showToast("Username sudah digunakan!", true); return; }
 
                 if (idx > -1) {
-                    this.state.users[idx] = { username: name, password: pass, role: role };
+                    this.state.users[idx] = { username: name, password: pass, namaGuru: fullname, role: role };
                     showToast("Akun berhasil diperbarui!");
                 } else {
-                    this.state.users.push({ username: name, password: pass, role: role });
+                    this.state.users.push({ username: name, password: pass, namaGuru: fullname, role: role });
                     showToast("Akun baru ditambahkan!");
                 }
                 
                 this.saveDataLocally();
-                this.saveToSpreadsheet(); // Otomatis simpan perubahan akun ke cloud
+                this.saveToSpreadsheet(); 
                 this.renderUserAdmin();
                 this.closeUserModal();
             },
 
             deleteUser(idx) {
                 const u = this.state.users[idx];
-                if(u.username === 'supriyadi') return; // Perlindungan
+                if(u.username === 'supriyadi') return; 
                 
                 this.showConfirm("Hapus Akun", `Yakin ingin menghapus akun "${u.username}"?`, () => {
                     this.state.users.splice(idx, 1);
                     this.saveDataLocally();
-                    this.saveToSpreadsheet(); // Otomatis simpan penghapusan akun ke cloud
+                    this.saveToSpreadsheet(); 
                     this.renderUserAdmin();
                     showToast("Akun berhasil dihapus.");
                 });
@@ -1050,7 +1088,6 @@
             openDonasiModal() { document.getElementById('donasi-modal').classList.remove('hidden'); void document.getElementById('donasi-modal').offsetWidth; document.getElementById('donasi-modal').classList.remove('opacity-0'); },
             closeDonasiModal() { document.getElementById('donasi-modal').classList.add('opacity-0'); setTimeout(() => document.getElementById('donasi-modal').classList.add('hidden'), 300); },
             
-            // FUNGSI PROMO MODAL
             openPromoModal() {
                 const m = document.getElementById('promo-modal');
                 const c = document.getElementById('promo-content');
@@ -1062,7 +1099,7 @@
                 const c = document.getElementById('promo-content');
                 m.classList.add('opacity-0'); c.classList.add('scale-95');
                 setTimeout(() => m.classList.add('hidden'), 300);
-                sessionStorage.setItem('eduPromoSeen', 'true'); // Tandai agar tidak muncul terus menerus
+                sessionStorage.setItem('eduPromoSeen', 'true'); 
             },
 
             generateEmptyGrids() {
@@ -1093,7 +1130,6 @@
             fillFormIdentitas() {
                 const id = this.state.identitas; const conf = this.state.config;
                 
-                // Set nilai jenjang dan update opsi kelas yang sesuai sebelum mengisi nilai kelas
                 if (id.jenjang && document.getElementById('in-jenjang')) {
                     document.getElementById('in-jenjang').value = id.jenjang;
                 }
@@ -1176,10 +1212,8 @@
                         const firstSheetName = workbook.SheetNames[0];
                         const worksheet = workbook.Sheets[firstSheetName];
                         
-                        // Konversi sheet ke array JSON dengan mode baris (header: 1)
                         const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
                         
-                        // Mencari baris yang mengandung header tabel
                         let headerRowIndex = -1;
                         for(let i = 0; i < json.length; i++) {
                             if(json[i] && json[i][0] == "No") {
@@ -1194,14 +1228,12 @@
                         }
 
                         let importedCount = 0;
-                        // Membaca baris data setelah header
                         for(let i = headerRowIndex + 1; i < json.length; i++) {
                             const row = json[i];
                             if (!row || !row[0]) continue;
                             
                             let no = parseInt(row[0]);
                             
-                            // Hanya import sesuai batas jumlah soal di identitas saat ini
                             if (no > this.state.config.jmlSoal) continue;
 
                             let tipe = row[1] ? row[1].toString().trim() : 'PG';
@@ -1230,7 +1262,6 @@
                         console.error(error);
                         showToast("Gagal membaca file Excel.", true);
                     }
-                    // Reset input agar bisa upload file yang sama lagi jika perlu
                     event.target.value = '';
                 };
                 reader.readAsArrayBuffer(file);
@@ -1277,7 +1308,6 @@
 
                 for (let i = 1; i <= jmlSiswa; i++) {
                     let rowData = [i, `Siswa ${i}`];
-                    // Tambah sel kosong untuk setiap jawaban soal
                     for(let j = 1; j <= jmlSoal; j++) rowData.push("");
                     headerData.push(rowData);
                 }
@@ -1301,10 +1331,8 @@
                         const firstSheetName = workbook.SheetNames[0];
                         const worksheet = workbook.Sheets[firstSheetName];
                         
-                        // Konversi sheet ke array JSON dengan mode baris (header: 1)
                         const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
                         
-                        // Mencari baris header (berisi "Nama Siswa")
                         let headerRowIndex = -1;
                         let namaColIndex = 1;
                         for(let i = 0; i < json.length; i++) {
@@ -1328,20 +1356,16 @@
                         let importedCount = 0;
                         let siswaIndex = 0;
 
-                        // Membaca baris data setelah header
                         for(let i = headerRowIndex + 1; i < json.length; i++) {
                             const row = json[i];
-                            // Skip jika baris benar-benar kosong (panjang 0)
                             if (!row || row.length === 0) continue; 
                             
-                            // Ambil nama (boleh kosong jika memang mau dikosongkan, tapi kita utamakan ada isi)
                             let nama = row[namaColIndex] ? row[namaColIndex].toString().trim() : '';
                             if (!nama && siswaIndex >= this.state.config.jmlSiswa) break;
 
                             if (siswaIndex < this.state.config.jmlSiswa) {
                                 if (nama) this.state.jawabanSiswa[siswaIndex].nama = nama;
 
-                                // Mengisi jawaban soal
                                 for(let j = 0; j < this.state.config.jmlSoal; j++) {
                                     let colIdx = namaColIndex + 1 + j;
                                     let jawaban = row[colIdx] !== undefined && row[colIdx] !== null ? row[colIdx].toString().trim().toUpperCase() : '';
@@ -1364,7 +1388,6 @@
                         console.error(error);
                         showToast("Gagal membaca file Excel.", true);
                     }
-                    // Reset input agar bisa upload file yang sama lagi
                     event.target.value = '';
                 };
                 reader.readAsArrayBuffer(file);
@@ -1450,7 +1473,6 @@
                 const doc = new jsPDF('p', 'mm', 'a4');
                 const id = this.state.identitas;
 
-                // 1. KOP Laporan
                 doc.setFontSize(14); doc.setFont("helvetica", "bold");
                 doc.text("LAPORAN DAFTAR NILAI SISWA", 105, 15, { align: 'center' });
                 doc.setFontSize(11); doc.setFont("helvetica", "normal");
@@ -1458,7 +1480,6 @@
                 doc.text(`Kelas: ${id.kelas || '-'} | Mata Pelajaran: ${id.mapel || '-'} | Semester: ${id.semester || '-'}`, 105, 28, { align: 'center' });
                 doc.setLineWidth(0.5); doc.line(14, 32, 196, 32);
 
-                // 2. Data Tabel
                 const tableCol = ["No", "Nama Siswa", "Skor PG", "Skor Esai", "Total Nilai", "Keterangan"];
                 const tableRows = this.studentGrades.map((g, i) => [
                     i + 1, g.nama, g.pg, g.isian, g.total.toFixed(2), g.keterangan
@@ -1469,24 +1490,21 @@
                     body: tableRows, 
                     startY: 38, 
                     theme: 'grid',
-                    margin: { top: 20, bottom: 25 }, // Memberi jarak margin yang aman jika halaman bertambah
+                    margin: { top: 20, bottom: 25 }, 
                     headStyles: { fillColor: [14, 165, 233], textColor: [255, 255, 255], halign: 'center' },
                     styles: { fontSize: 9, cellPadding: 3 },
                     columnStyles: { 0: { halign: 'center', cellWidth: 12 }, 2: { halign: 'center', cellWidth: 20 }, 3: { halign: 'center', cellWidth: 20 }, 4: { halign: 'center', cellWidth: 25 }, 5: { halign: 'center', cellWidth: 25 } },
                     didDrawPage: function (data) {
-                        // Footer Penomoran Halaman di Setiap Lembar
                         doc.setFontSize(9); doc.setFont("helvetica", "italic");
                         doc.text('Halaman ' + doc.internal.getNumberOfPages(), data.settings.margin.left, doc.internal.pageSize.height - 10);
                     }
                 });
 
-                // 3. Tanda Tangan Pengesahan (Pindah halaman jika ruang di bawah tidak cukup)
                 let finalY = doc.lastAutoTable.finalY;
                 const pageHeight = doc.internal.pageSize.height;
                 
-                // Kalkulasi: Butuh ruang setidaknya 45mm untuk kolom tanda tangan
                 if (finalY + 45 > pageHeight - 20) { 
-                    doc.addPage(); // Paksa ke halaman 2 (atau 3) jika tabel terlalu mepet ke bawah
+                    doc.addPage(); 
                     finalY = 25; 
                 } else { 
                     finalY += 15; 
@@ -1512,7 +1530,6 @@
                 if(!this.studentGrades.length) { showToast("Belum ada data nilai! Silakan klik Hitung terlebih dahulu.", true); return; }
                 const id = this.state.identitas;
                 
-                // Gunakan HTML Blob untuk mendapatkan format excel yang rapih beserta Colspan Tanda Tangan
                 let templateExcel = `
                     <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
                     <head><meta charset="utf-8"><style>.tc { text-align: center; } .tb { font-weight: bold; } .ba { border: 1px solid black; } .bg { background-color: #d9e1f2; } .vm { vertical-align: middle; }</style></head>
@@ -1588,11 +1605,9 @@
                 if(!this.analysisResult) return;
                 const res = this.analysisResult;
                 
-                // Update stats dashboard atas
                 document.getElementById('dash-valid').innerText = `${res.validCount} / ${res.K}`;
                 document.getElementById('dash-reliabilitas').innerText = res.reliabilitas.toFixed(2);
                 
-                // Update statistik spesifik di tab analisis
                 const statsContainer = document.getElementById('analisis-stats');
                 const dipakai = res.items.filter(i => i.rec === 'Dipakai').length;
                 const direvisi = res.items.filter(i => i.rec === 'Direvisi').length;
@@ -1623,10 +1638,8 @@
                     `;
                 }
 
-                // Render Chart (Grafik Analisis)
                 this.renderAnalisisChart(res.items);
 
-                // Render Tabel
                 const tbody = document.getElementById('table-analisis-body'); tbody.innerHTML = '';
                 res.items.forEach(item => {
                     let recBg = item.rec === 'Dipakai' ? 'bg-green-100 text-green-800' : (item.rec === 'Dibuang' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800');
@@ -1641,7 +1654,6 @@
                     `;
                 });
 
-                // Render Deskripsi Analisis
                 const descContainer = document.getElementById('analisis-deskripsi');
                 if(descContainer) {
                     descContainer.innerHTML = `
@@ -1660,7 +1672,6 @@
                 const ctx = document.getElementById('chart-analisis');
                 if(!ctx) return;
                 
-                // Destroy chart lama agar tidak menumpuk saat direfresh
                 if(this.charts.analisis) {
                     this.charts.analisis.destroy();
                 }
@@ -1670,7 +1681,6 @@
                 const dataD = items.map(i => i.d);
                 const dataR = items.map(i => i.r);
 
-                // Plugin khusus untuk memastikan background Canvas berwarna putih saat di-export ke PDF
                 const customBgPlugin = {
                     id: 'customCanvasBackgroundColor',
                     beforeDraw: (chart, args, options) => {
@@ -1715,7 +1725,6 @@
                 const doc = new jsPDF('p', 'mm', 'a4');
                 const id = this.state.identitas;
 
-                // 1. KOP SURAT
                 doc.setFontSize(14); doc.setFont("helvetica", "bold");
                 doc.text("LAPORAN HASIL ANALISIS BUTIR SOAL", 105, 15, { align: 'center' });
                 doc.setFontSize(11); doc.setFont("helvetica", "normal");
@@ -1723,7 +1732,6 @@
                 doc.text(`Kelas: ${id.kelas || '-'} | Mata Pelajaran: ${id.mapel || '-'} | Semester: ${id.semester || '-'}`, 105, 28, { align: 'center' });
                 doc.setLineWidth(0.5); doc.line(14, 32, 196, 32);
 
-                // 2. KARTU STATISTIK (Dibuat sebagai tabel mini agar rapi)
                 const dipakai = this.analysisResult.items.filter(i => i.rec === 'Dipakai').length;
                 const direvisi = this.analysisResult.items.filter(i => i.rec === 'Direvisi').length;
                 const dibuang = this.analysisResult.items.filter(i => i.rec === 'Dibuang').length;
@@ -1745,22 +1753,18 @@
 
                 let currentY = doc.lastAutoTable.finalY + 8;
 
-                // 3. GRAFIK ANALISIS
                 const canvas = document.getElementById('chart-analisis');
                 if (canvas) {
                     const imgData = canvas.toDataURL('image/png', 1.0);
-                    // Mencegah error 'Incomplete or corrupt PNG file' jika canvas kosong/tersembunyi
                     if (imgData && imgData.length > 100) {
                         doc.setFontSize(10); doc.setFont("helvetica", "bold");
                         doc.text("Grafik Hasil Analisis:", 14, currentY);
                         currentY += 4;
                         
-                        // Mengambil gambar dari canvas
-                        const pdfWidth = doc.internal.pageSize.getWidth() - 28; // Margin 14mm kiri & kanan
+                        const pdfWidth = doc.internal.pageSize.getWidth() - 28; 
                         const canvasRatio = canvas.width / (canvas.height || 1);
-                        const pdfHeight = pdfWidth / canvasRatio; // Menjaga proporsi gambar grafik
+                        const pdfHeight = pdfWidth / canvasRatio; 
                         
-                        // Cek ketersediaan ruang, kalau mepet ganti halaman
                         if (currentY + pdfHeight > doc.internal.pageSize.height - 20) {
                             doc.addPage();
                             currentY = 20;
@@ -1771,8 +1775,6 @@
                     }
                 }
 
-                // 4. TABEL RINCIAN ANALISIS BUTIR SOAL
-                // Cek apakah ruang cukup untuk minimal judul tabel dan header tabel
                 if (currentY > doc.internal.pageSize.height - 40) {
                     doc.addPage();
                     currentY = 20;
@@ -1803,7 +1805,6 @@
                     }
                 });
 
-                // 5. KESIMPULAN DAN DESKRIPSI
                 let finalY = doc.lastAutoTable.finalY + 10;
                 const pageHeight = doc.internal.pageSize.height;
                 
@@ -1820,7 +1821,6 @@
                 doc.text(splitDesc, 14, finalY);
                 finalY += (splitDesc.length * 5) + 15;
 
-                // 6. TANDA TANGAN PENGESAHAN
                 if (finalY + 45 > pageHeight - 20) { doc.addPage(); finalY = 25; } 
 
                 doc.setFontSize(10); doc.setFont("helvetica", "normal");
@@ -1881,7 +1881,6 @@
                     `;
                 });
 
-                // Menambahkan Baris Deskripsi Kesimpulan sebelum Tanda Tangan
                 templateExcel += `
                             <tr><td colspan="5"></td></tr>
                             <tr><td colspan="5" class="tb" style="text-align: left;">KESIMPULAN DAN PENJELASAN HASIL ANALISIS:</td></tr>
@@ -1932,17 +1931,15 @@
                 }
 
                 const { jsPDF } = window.jspdf;
-                // Gunakan format Landscape 'l' agar kolom Jawaban Siswa muat banyak
                 const doc = new jsPDF('l', 'mm', 'a4');
                 const id = this.state.identitas;
 
-                // Helper Fungsi Kop Surat
                 const printKopSurat = (title) => {
                     const pageWidth = doc.internal.pageSize.width;
                     doc.setFontSize(14); doc.setFont("helvetica", "bold");
                     doc.text(title, pageWidth / 2, 15, { align: 'center' });
                     doc.setFontSize(11); doc.setFont("helvetica", "normal");
-                    doc.text(`${(id.sekolah || 'SEKOLAH').toUpperCase()} - TAHUN AJARAN ${id.tahun || '-'}`, pageWidth / 2, 22, { align: 'center' });
+                    doc.text(`${(id.sekolah || 'SEKOLAH').toUpperCase()} - TAHIAN AJARAN ${id.tahun || '-'}`, pageWidth / 2, 22, { align: 'center' });
                     doc.text(`Kelas: ${id.kelas || '-'} | Mata Pelajaran: ${id.mapel || '-'} | Semester: ${id.semester || '-'}`, pageWidth / 2, 28, { align: 'center' });
                     doc.setLineWidth(0.5); doc.line(14, 32, pageWidth - 14, 32);
                 };
@@ -2008,11 +2005,9 @@
 
                 let currentY = doc.lastAutoTable.finalY + 8;
                 
-                // Tambahkan Grafik Analisis (opsional jika muat dan tervisualisasi)
                 const canvas = document.getElementById('chart-analisis');
                 if (canvas) {
                     const imgData = canvas.toDataURL('image/png', 1.0);
-                    // Mencegah error 'Incomplete or corrupt PNG file' jika canvas kosong/tersembunyi
                     if (imgData && imgData.length > 100) {
                         doc.setFontSize(10); doc.setFont("helvetica", "bold");
                         doc.text("Grafik Hasil Analisis:", 14, currentY);
@@ -2021,7 +2016,6 @@
                         const canvasRatio = canvas.width / (canvas.height || 1);
                         const pdfHeight = pdfWidth / canvasRatio;
                         
-                        // Batasi tinggi maksimum grafik agar tidak terlalu mendominasi di landscape
                         const renderHeight = Math.min(pdfHeight, 100); 
                         
                         if (currentY + renderHeight > doc.internal.pageSize.height - 20) { doc.addPage(); currentY = 20; }
@@ -2045,7 +2039,6 @@
                     didDrawPage: printFooter
                 });
 
-                // --- TANDA TANGAN PENGESAHAN (DI HALAMAN TERAKHIR) ---
                 let finalY = doc.lastAutoTable.finalY + 10;
                 const pageHeight = doc.internal.pageSize.height;
                 const pageWidth = doc.internal.pageSize.width;
@@ -2062,7 +2055,6 @@
                 doc.text(splitDesc, 14, finalY);
                 finalY += (splitDesc.length * 5) + 15;
 
-                // Tanda tangan di sudut kanan karena ini landscape
                 if (finalY + 45 > pageHeight - 20) { doc.addPage(); finalY = 25; } 
                 
                 const ttdColKanan = pageWidth - 80;
@@ -2091,7 +2083,7 @@
                 
                 const id = this.state.identitas;
                 const res = this.analysisResult;
-                const maxCols = this.state.config.jmlSoal + 2; // Lebar total grid Excel berdasarkan jumlah soal
+                const maxCols = this.state.config.jmlSoal + 2; 
                 
                 let templateExcel = `
                     <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
@@ -2180,7 +2172,6 @@
                     templateExcel += `<tr><td class="ba tc vm">${item.no}</td><td class="ba tc vm">${item.p.toFixed(2)} (${item.pCat})</td><td class="ba tc vm">${item.d.toFixed(2)} (${item.dCat})</td><td class="ba tc vm">${item.r.toFixed(2)} (${item.rCat})</td><td class="ba tc tb vm">${item.rec}</td></tr>`;
                 });
 
-                // TANDA TANGAN DI AKHIR EXCEL
                 templateExcel += `
                             <tr><td colspan="${maxCols}"></td></tr><tr><td colspan="${maxCols}"></td></tr>
                             <tr>
