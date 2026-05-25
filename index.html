@@ -1473,12 +1473,12 @@
                 const doc = new jsPDF('p', 'mm', 'a4');
                 const id = this.state.identitas;
 
-                doc.setFontSize(14); doc.setFont("helvetica", "bold");
-                doc.text("LAPORAN DAFTAR NILAI SISWA", 105, 15, { align: 'center' });
-                doc.setFontSize(11); doc.setFont("helvetica", "normal");
-                doc.text(`${(id.sekolah || 'SEKOLAH').toUpperCase()} - TAHUN AJARAN ${id.tahun || '-'}`, 105, 22, { align: 'center' });
-                doc.text(`Kelas: ${id.kelas || '-'} | Mata Pelajaran: ${id.mapel || '-'} | Semester: ${id.semester || '-'}`, 105, 28, { align: 'center' });
-                doc.setLineWidth(0.5); doc.line(14, 32, 196, 32);
+                doc.setFontSize(12); doc.setFont("helvetica", "bold");
+                doc.text("LAPORAN DAFTAR NILAI SISWA", 105, 12, { align: 'center' });
+                doc.setFontSize(9); doc.setFont("helvetica", "normal");
+                doc.text(`${(id.sekolah || 'SEKOLAH').toUpperCase()} - TAHUN AJARAN ${id.tahun || '-'}`, 105, 17, { align: 'center' });
+                doc.text(`Kelas: ${id.kelas || '-'} | Mata Pelajaran: ${id.mapel || '-'} | Semester: ${id.semester || '-'}`, 105, 22, { align: 'center' });
+                doc.setLineWidth(0.5); doc.line(14, 25, 196, 25);
 
                 const tableCol = ["No", "Nama Siswa", "Skor PG", "Skor Esai", "Total Nilai", "Keterangan"];
                 const tableRows = this.studentGrades.map((g, i) => [
@@ -1488,42 +1488,42 @@
                 doc.autoTable({
                     head: [tableCol], 
                     body: tableRows, 
-                    startY: 38, 
+                    startY: 28, 
                     theme: 'grid',
-                    margin: { top: 20, bottom: 25 }, 
+                    margin: { top: 15, bottom: 15 }, 
                     headStyles: { fillColor: [14, 165, 233], textColor: [255, 255, 255], halign: 'center' },
-                    styles: { fontSize: 9, cellPadding: 3 },
-                    columnStyles: { 0: { halign: 'center', cellWidth: 12 }, 2: { halign: 'center', cellWidth: 20 }, 3: { halign: 'center', cellWidth: 20 }, 4: { halign: 'center', cellWidth: 25 }, 5: { halign: 'center', cellWidth: 25 } },
+                    styles: { fontSize: 8, cellPadding: 1.5 }, // Padding dan font diperkecil untuk hemat kertas
+                    columnStyles: { 0: { halign: 'center', cellWidth: 10 }, 2: { halign: 'center', cellWidth: 18 }, 3: { halign: 'center', cellWidth: 18 }, 4: { halign: 'center', cellWidth: 22 }, 5: { halign: 'center', cellWidth: 25 } },
                     didDrawPage: function (data) {
-                        doc.setFontSize(9); doc.setFont("helvetica", "italic");
-                        doc.text('Halaman ' + doc.internal.getNumberOfPages(), data.settings.margin.left, doc.internal.pageSize.height - 10);
+                        doc.setFontSize(8); doc.setFont("helvetica", "italic");
+                        doc.text('Halaman ' + doc.internal.getNumberOfPages(), data.settings.margin.left, doc.internal.pageSize.height - 8);
                     }
                 });
 
                 let finalY = doc.lastAutoTable.finalY;
                 const pageHeight = doc.internal.pageSize.height;
                 
-                if (finalY + 45 > pageHeight - 20) { 
+                if (finalY + 35 > pageHeight - 15) { 
                     doc.addPage(); 
-                    finalY = 25; 
+                    finalY = 20; 
                 } else { 
-                    finalY += 15; 
+                    finalY += 10; 
                 }
 
-                doc.setFontSize(10); doc.setFont("helvetica", "normal");
+                doc.setFontSize(9); doc.setFont("helvetica", "normal");
                 doc.text(id.tempatTanggal || "....................., ............................", 140, finalY);
-                doc.text("Mengetahui,", 25, finalY + 10);
-                doc.text("Kepala Sekolah", 25, finalY + 15);
-                doc.text("Guru / Wali Kelas", 140, finalY + 15);
+                doc.text("Mengetahui,", 25, finalY + 5);
+                doc.text("Kepala Sekolah", 25, finalY + 10);
+                doc.text("Guru / Wali Kelas", 140, finalY + 10);
                 doc.setFont("helvetica", "bold");
-                doc.text(id.kepalaSekolah || "_________________________.", 25, finalY + 40);
-                doc.text(id.guru || "_________________________.", 140, finalY + 40);
+                doc.text(id.kepalaSekolah || "_________________________.", 25, finalY + 25);
+                doc.text(id.guru || "_________________________.", 140, finalY + 25);
                 doc.setFont("helvetica", "normal");
-                doc.text(`NIP. ${id.nipKepsek || "............................."}`, 25, finalY + 46);
-                doc.text(`NIP. ${id.nipGuru || "............................."}`, 140, finalY + 46);
+                doc.text(`NIP. ${id.nipKepsek || "............................."}`, 25, finalY + 30);
+                doc.text(`NIP. ${id.nipGuru || "............................."}`, 140, finalY + 30);
 
                 doc.save(`Laporan_Nilai_${id.kelas || 'Kelas'}_${id.mapel || 'Mapel'}.pdf`);
-                showToast("PDF Laporan Resmi berhasil diunduh.");
+                showToast("PDF Laporan Resmi (Mode Hemat) berhasil diunduh.");
             },
 
             exportNilaiExcelResmi() {
@@ -1642,14 +1642,14 @@
 
                 const tbody = document.getElementById('table-analisis-body'); tbody.innerHTML = '';
                 res.items.forEach(item => {
-                    let recBg = item.rec === 'Dipakai' ? 'bg-green-100 text-green-800' : (item.rec === 'Dibuang' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800');
+                    let textBg = item.rec === 'Dipakai' ? 'bg-green-100 text-green-800' : (item.rec === 'Dibuang' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800');
                     tbody.innerHTML += `
                         <tr class="border-b bg-white hover:bg-gray-50 transition">
                             <td class="px-4 py-2 text-center border-r font-medium">${item.no}</td>
                             <td class="px-4 py-2 border-r"><span class="font-bold text-gray-700">${item.p.toFixed(2)}</span> <span class="text-xs text-gray-500">(${item.pCat})</span></td>
                             <td class="px-4 py-2 border-r"><span class="font-bold text-gray-700">${item.d.toFixed(2)}</span> <span class="text-xs text-gray-500">(${item.dCat})</span></td>
                             <td class="px-4 py-2 border-r"><span class="font-bold text-gray-700">${item.r.toFixed(2)}</span> <span class="text-xs text-gray-500">(${item.rCat})</span></td>
-                            <td class="px-4 py-2 text-center"><span class="px-3 py-1 rounded-full text-xs font-bold ${recBg}">${item.rec}</span></td>
+                            <td class="px-4 py-2 text-center"><span class="px-3 py-1 rounded-full text-xs font-bold ${textBg}">${item.rec}</span></td>
                         </tr>
                     `;
                 });
@@ -1725,12 +1725,12 @@
                 const doc = new jsPDF('p', 'mm', 'a4');
                 const id = this.state.identitas;
 
-                doc.setFontSize(14); doc.setFont("helvetica", "bold");
-                doc.text("LAPORAN HASIL ANALISIS BUTIR SOAL", 105, 15, { align: 'center' });
-                doc.setFontSize(11); doc.setFont("helvetica", "normal");
-                doc.text(`${(id.sekolah || 'SEKOLAH').toUpperCase()} - TAHUN AJARAN ${id.tahun || '-'}`, 105, 22, { align: 'center' });
-                doc.text(`Kelas: ${id.kelas || '-'} | Mata Pelajaran: ${id.mapel || '-'} | Semester: ${id.semester || '-'}`, 105, 28, { align: 'center' });
-                doc.setLineWidth(0.5); doc.line(14, 32, 196, 32);
+                doc.setFontSize(12); doc.setFont("helvetica", "bold");
+                doc.text("LAPORAN HASIL ANALISIS BUTIR SOAL", 105, 12, { align: 'center' });
+                doc.setFontSize(9); doc.setFont("helvetica", "normal");
+                doc.text(`${(id.sekolah || 'SEKOLAH').toUpperCase()} - TAHUN AJARAN ${id.tahun || '-'}`, 105, 17, { align: 'center' });
+                doc.text(`Kelas: ${id.kelas || '-'} | Mapel: ${id.mapel || '-'} | Smt: ${id.semester || '-'}`, 105, 22, { align: 'center' });
+                doc.setLineWidth(0.5); doc.line(14, 25, 196, 25);
 
                 const dipakai = this.analysisResult.items.filter(i => i.rec === 'Dipakai').length;
                 const direvisi = this.analysisResult.items.filter(i => i.rec === 'Direvisi').length;
@@ -1744,43 +1744,45 @@
                         `${direvisi} Soal`,
                         `${dibuang} Soal`
                     ]],
-                    startY: 36,
+                    startY: 28,
                     theme: 'grid',
                     headStyles: { fillColor: [240, 240, 240], textColor: [50, 50, 50], halign: 'center', fontStyle: 'bold' },
-                    bodyStyles: { halign: 'center', fontStyle: 'bold', fontSize: 11, textColor: [14, 165, 233] },
+                    bodyStyles: { halign: 'center', fontStyle: 'bold', fontSize: 10, textColor: [14, 165, 233] },
+                    styles: { cellPadding: 1.5 },
                     margin: { left: 14, right: 14 }
                 });
 
-                let currentY = doc.lastAutoTable.finalY + 8;
+                let currentY = doc.lastAutoTable.finalY + 6;
 
                 const canvas = document.getElementById('chart-analisis');
                 if (canvas) {
                     const imgData = canvas.toDataURL('image/png', 1.0);
                     if (imgData && imgData.length > 100) {
-                        doc.setFontSize(10); doc.setFont("helvetica", "bold");
+                        doc.setFontSize(9); doc.setFont("helvetica", "bold");
                         doc.text("Grafik Hasil Analisis:", 14, currentY);
                         currentY += 4;
                         
                         const pdfWidth = doc.internal.pageSize.getWidth() - 28; 
                         const canvasRatio = canvas.width / (canvas.height || 1);
                         const pdfHeight = pdfWidth / canvasRatio; 
+                        const renderHeight = Math.min(pdfHeight, 55); // Batasi tinggi max grafik agar hemat tempat
                         
-                        if (currentY + pdfHeight > doc.internal.pageSize.height - 20) {
+                        if (currentY + renderHeight > doc.internal.pageSize.height - 15) {
                             doc.addPage();
-                            currentY = 20;
+                            currentY = 15;
                         }
                         
-                        doc.addImage(imgData, 'PNG', 14, currentY, pdfWidth, pdfHeight);
-                        currentY += pdfHeight + 10;
+                        doc.addImage(imgData, 'PNG', 14, currentY, Math.min(pdfWidth, 160), renderHeight);
+                        currentY += renderHeight + 6;
                     }
                 }
 
-                if (currentY > doc.internal.pageSize.height - 40) {
+                if (currentY > doc.internal.pageSize.height - 30) {
                     doc.addPage();
-                    currentY = 20;
+                    currentY = 15;
                 }
 
-                doc.setFontSize(10); doc.setFont("helvetica", "bold");
+                doc.setFontSize(9); doc.setFont("helvetica", "bold");
                 doc.text("Tabel Rincian Analisis Tiap Butir Soal:", 14, currentY);
                 currentY += 4;
 
@@ -1795,48 +1797,48 @@
 
                 doc.autoTable({
                     head: [tableCol], body: tableRows, startY: currentY, theme: 'grid',
-                    margin: { top: 20, bottom: 25 },
+                    margin: { top: 15, bottom: 15 },
                     headStyles: { fillColor: [14, 165, 233], textColor: [255, 255, 255], halign: 'center' },
-                    styles: { fontSize: 9, cellPadding: 3 },
-                    columnStyles: { 0: { halign: 'center', cellWidth: 15 }, 4: { halign: 'center', cellWidth: 30 } },
+                    styles: { fontSize: 8, cellPadding: 1.5 }, // Mode Hemat kertas
+                    columnStyles: { 0: { halign: 'center', cellWidth: 12 }, 4: { halign: 'center', cellWidth: 25 } },
                     didDrawPage: function (data) {
-                        doc.setFontSize(9); doc.setFont("helvetica", "italic");
-                        doc.text('Halaman ' + doc.internal.getNumberOfPages(), data.settings.margin.left, doc.internal.pageSize.height - 10);
+                        doc.setFontSize(8); doc.setFont("helvetica", "italic");
+                        doc.text('Halaman ' + doc.internal.getNumberOfPages(), data.settings.margin.left, doc.internal.pageSize.height - 8);
                     }
                 });
 
-                let finalY = doc.lastAutoTable.finalY + 10;
+                let finalY = doc.lastAutoTable.finalY + 8;
                 const pageHeight = doc.internal.pageSize.height;
                 
-                const descText = `Berdasarkan hasil analisis terhadap ${this.analysisResult.K} butir soal, instrumen tes ini memiliki koefisien reliabilitas sebesar ${this.analysisResult.reliabilitas.toFixed(2)} (${this.analysisResult.relCat}). Secara rinci rekomendasi butir soal adalah sebagai berikut: terdapat ${dipakai} soal LAYAK DIPAKAI (memiliki tingkat kesukaran, validitas, dan daya pembeda yang baik), ${direvisi} soal perlu DIREVISI (pengecoh kurang berfungsi secara proporsional), dan ${dibuang} soal disarankan untuk DIBUANG (berstatus tidak valid atau memiliki daya pembeda jelek).`;
+                const descText = `Berdasarkan hasil analisis terhadap ${this.analysisResult.K} butir soal, instrumen tes ini memiliki koefisien reliabilitas sebesar ${this.analysisResult.reliabilitas.toFixed(2)} (${this.analysisResult.relCat}). Secara rinci rekomendasi butir soal adalah: terdapat ${dipakai} soal LAYAK DIPAKAI, ${direvisi} soal perlu DIREVISI, dan ${dibuang} soal disarankan DIBUANG.`;
 
-                if (finalY + 30 > pageHeight - 20) { doc.addPage(); finalY = 20; }
+                if (finalY + 20 > pageHeight - 15) { doc.addPage(); finalY = 15; }
                 
-                doc.setFontSize(10); doc.setFont("helvetica", "bold");
-                doc.text("Kesimpulan dan Deskripsi Hasil Analisis:", 14, finalY);
-                finalY += 6;
+                doc.setFontSize(9); doc.setFont("helvetica", "bold");
+                doc.text("Kesimpulan Analisis:", 14, finalY);
+                finalY += 4;
                 
                 doc.setFont("helvetica", "normal");
                 const splitDesc = doc.splitTextToSize(descText, 182);
                 doc.text(splitDesc, 14, finalY);
-                finalY += (splitDesc.length * 5) + 15;
+                finalY += (splitDesc.length * 4) + 10;
 
-                if (finalY + 45 > pageHeight - 20) { doc.addPage(); finalY = 25; } 
+                if (finalY + 35 > pageHeight - 15) { doc.addPage(); finalY = 20; } 
 
-                doc.setFontSize(10); doc.setFont("helvetica", "normal");
+                doc.setFontSize(9); doc.setFont("helvetica", "normal");
                 doc.text(id.tempatTanggal || "....................., ............................", 140, finalY);
-                doc.text("Mengetahui,", 25, finalY + 10);
-                doc.text("Kepala Sekolah", 25, finalY + 15);
-                doc.text("Guru / Wali Kelas", 140, finalY + 15);
+                doc.text("Mengetahui,", 25, finalY + 5);
+                doc.text("Kepala Sekolah", 25, finalY + 10);
+                doc.text("Guru / Wali Kelas", 140, finalY + 10);
                 doc.setFont("helvetica", "bold");
-                doc.text(id.kepalaSekolah || "_________________________.", 25, finalY + 40);
-                doc.text(id.guru || "_________________________.", 140, finalY + 40);
+                doc.text(id.kepalaSekolah || "_________________________.", 25, finalY + 25);
+                doc.text(id.guru || "_________________________.", 140, finalY + 25);
                 doc.setFont("helvetica", "normal");
-                doc.text(`NIP. ${id.nipKepsek || "............................."}`, 25, finalY + 46);
-                doc.text(`NIP. ${id.nipGuru || "............................."}`, 140, finalY + 46);
+                doc.text(`NIP. ${id.nipKepsek || "............................."}`, 25, finalY + 30);
+                doc.text(`NIP. ${id.nipGuru || "............................."}`, 140, finalY + 30);
 
                 doc.save(`Laporan_Analisis_${id.kelas || 'Kelas'}_${id.mapel || 'Mapel'}.pdf`);
-                showToast("PDF Laporan Analisis Resmi berhasil diunduh.");
+                showToast("PDF Laporan Analisis (Mode Hemat) berhasil diunduh.");
             },
 
             exportAnalisisExcelResmi() {
@@ -1933,63 +1935,78 @@
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF('l', 'mm', 'a4');
                 const id = this.state.identitas;
+                const pageWidth = doc.internal.pageSize.width;
 
                 const printKopSurat = (title) => {
-                    const pageWidth = doc.internal.pageSize.width;
                     doc.setFontSize(14); doc.setFont("helvetica", "bold");
-                    doc.text(title, pageWidth / 2, 15, { align: 'center' });
-                    doc.setFontSize(11); doc.setFont("helvetica", "normal");
-                    doc.text(`${(id.sekolah || 'SEKOLAH').toUpperCase()} - TAHIAN AJARAN ${id.tahun || '-'}`, pageWidth / 2, 22, { align: 'center' });
-                    doc.text(`Kelas: ${id.kelas || '-'} | Mata Pelajaran: ${id.mapel || '-'} | Semester: ${id.semester || '-'}`, pageWidth / 2, 28, { align: 'center' });
-                    doc.setLineWidth(0.5); doc.line(14, 32, pageWidth - 14, 32);
+                    doc.text(title, pageWidth / 2, 12, { align: 'center' });
+                    doc.setFontSize(10); doc.setFont("helvetica", "normal");
+                    doc.text(`${(id.sekolah || 'SEKOLAH').toUpperCase()} - TAHUN AJARAN ${id.tahun || '-'}`, pageWidth / 2, 17, { align: 'center' });
+                    doc.text("Laporan Global Hasil Analisis dan Penilaian Evaluasi Pembelajaran", pageWidth / 2, 22, { align: 'center' });
+                    doc.setLineWidth(0.5); doc.line(14, 25, pageWidth - 14, 25);
                 };
 
                 const printFooter = (data) => {
-                    doc.setFontSize(9); doc.setFont("helvetica", "italic");
-                    doc.text('Halaman ' + doc.internal.getNumberOfPages(), data.settings.margin.left, doc.internal.pageSize.height - 10);
+                    doc.setFontSize(8); doc.setFont("helvetica", "italic");
+                    doc.text('Laporan Global EduAnalisa - Halaman ' + doc.internal.getNumberOfPages(), data.settings.margin.left, doc.internal.pageSize.height - 8);
                 };
 
-                // --- 1. LEMBAR KUNCI JAWABAN ---
-                printKopSurat("LEMBAR KUNCI JAWABAN");
-                const kunciCols = ["No", "Jenis Soal", "Kunci / Bobot"];
-                const kunciRows = this.state.kunci.map(k => [k.no, k.tipe, k.jawaban]);
+                // --- 1. LEMBAR KUNCI JAWABAN (Halaman 1) ---
+                printKopSurat("1. LEMBAR KUNCI JAWABAN");
+                const kunciCols = ["No", "Jenis Soal", "Kunci / Bobot", "No", "Jenis Soal", "Kunci / Bobot"];
+                const kunciRows = [];
+                const keys = this.state.kunci;
+                const mid = Math.ceil(keys.length / 2); // Membagi data menjadi 2 kolom
+                
+                for (let i = 0; i < mid; i++) {
+                    const k1 = keys[i];
+                    const k2 = keys[i + mid];
+                    kunciRows.push([
+                        k1.no, k1.tipe, k1.jawaban,
+                        k2 ? k2.no : "", k2 ? k2.tipe : "", k2 ? k2.jawaban : ""
+                    ]);
+                }
+
                 doc.autoTable({
-                    head: [kunciCols], body: kunciRows, startY: 38, theme: 'grid',
+                    head: [kunciCols], body: kunciRows, startY: 30, theme: 'grid',
                     headStyles: { fillColor: [14, 165, 233], textColor: [255, 255, 255], halign: 'center' },
-                    styles: { fontSize: 9, cellPadding: 3, halign: 'center' },
+                    styles: { fontSize: 8, cellPadding: 1.5, halign: 'center' },
+                    margin: { bottom: 15 },
                     didDrawPage: printFooter
                 });
 
-                // --- 2. LEMBAR JAWABAN SISWA ---
+                // --- 2. LEMBAR JAWABAN SISWA (Halaman 2) ---
                 doc.addPage();
-                printKopSurat("LEMBAR JAWABAN SISWA");
+                printKopSurat("2. LEMBAR DATA RESPONS JAWABAN SISWA");
                 let ansCols = ["No", "Nama Siswa"];
                 for(let i=1; i<=this.state.config.jmlSoal; i++) ansCols.push(i.toString());
                 const ansRows = this.state.jawabanSiswa.map((s, i) => [i+1, s.nama, ...s.jawaban]);
                 doc.autoTable({
-                    head: [ansCols], body: ansRows, startY: 38, theme: 'grid',
+                    head: [ansCols], body: ansRows, startY: 30, theme: 'grid',
                     headStyles: { fillColor: [14, 165, 233], textColor: [255, 255, 255], halign: 'center' },
-                    styles: { fontSize: 8, cellPadding: 2, halign: 'center' },
+                    styles: { fontSize: 7, cellPadding: 1.5, halign: 'center' }, 
                     columnStyles: { 1: { halign: 'left' } },
+                    margin: { bottom: 15 },
                     didDrawPage: printFooter
                 });
 
-                // --- 3. DAFTAR NILAI SISWA ---
+                // --- 3. DAFTAR NILAI SISWA (Halaman 3) ---
                 doc.addPage();
-                printKopSurat("LAPORAN DAFTAR NILAI SISWA");
+                printKopSurat("3. DAFTAR PEROLEHAN NILAI EVALUASI SISWA");
                 const nilaiCols = ["No", "Nama Siswa", "Skor PG", "Skor Esai", "Total Nilai", "Keterangan"];
                 const nilaiRows = this.studentGrades.map((g, i) => [i + 1, g.nama, g.pg, g.isian, g.total.toFixed(2), g.keterangan]);
                 doc.autoTable({
-                    head: [nilaiCols], body: nilaiRows, startY: 38, theme: 'grid',
+                    head: [nilaiCols], body: nilaiRows, startY: 30, theme: 'grid',
                     headStyles: { fillColor: [14, 165, 233], textColor: [255, 255, 255], halign: 'center' },
-                    styles: { fontSize: 9, cellPadding: 3, halign: 'center' },
+                    styles: { fontSize: 8, cellPadding: 1.5, halign: 'center' },
                     columnStyles: { 1: { halign: 'left' } },
+                    margin: { bottom: 15 },
                     didDrawPage: printFooter
                 });
 
-                // --- 4. HASIL ANALISIS BUTIR SOAL ---
+                // --- 4. HASIL ANALISIS BUTIR SOAL (Halaman 4) ---
                 doc.addPage();
-                printKopSurat("LAPORAN HASIL ANALISIS BUTIR SOAL");
+                printKopSurat("4. LAPORAN HASIL ANALISIS PARAMETRIK BUTIR SOAL");
                 const res = this.analysisResult;
                 const dipakai = res.items.filter(i => i.rec === 'Dipakai').length;
                 const direvisi = res.items.filter(i => i.rec === 'Direvisi').length;
@@ -1998,36 +2015,31 @@
                 doc.autoTable({
                     head: [['Reliabilitas Tes', 'Soal Layak Dipakai', 'Soal Direvisi', 'Soal Dibuang']],
                     body: [[`${res.reliabilitas.toFixed(2)} (${res.relCat})`, `${dipakai} Soal`, `${direvisi} Soal`, `${dibuang} Soal`]],
-                    startY: 38, theme: 'grid',
+                    startY: 30, theme: 'grid',
                     headStyles: { fillColor: [240, 240, 240], textColor: [50, 50, 50], halign: 'center', fontStyle: 'bold' },
-                    bodyStyles: { halign: 'center', fontStyle: 'bold', fontSize: 11, textColor: [14, 165, 233] },
+                    bodyStyles: { halign: 'center', fontStyle: 'bold', fontSize: 9, textColor: [14, 165, 233] },
+                    styles: { cellPadding: 1.5 },
+                    didDrawPage: printFooter
                 });
-
-                let currentY = doc.lastAutoTable.finalY + 8;
+                
+                let currentY = doc.lastAutoTable.finalY + 6;
                 
                 const canvas = document.getElementById('chart-analisis');
                 if (canvas) {
                     const imgData = canvas.toDataURL('image/png', 1.0);
                     if (imgData && imgData.length > 100) {
-                        doc.setFontSize(10); doc.setFont("helvetica", "bold");
-                        doc.text("Grafik Hasil Analisis:", 14, currentY);
-                        currentY += 4;
-                        const pdfWidth = doc.internal.pageSize.getWidth() - 28;
+                        doc.setFontSize(9); doc.setFont("helvetica", "bold");
+                        doc.text("Visualisasi Statistik Parameter Butir Soal:", 14, currentY);
+                        currentY += 3;
+                        const pdfWidth = 140; 
                         const canvasRatio = canvas.width / (canvas.height || 1);
                         const pdfHeight = pdfWidth / canvasRatio;
+                        const renderHeight = Math.min(pdfHeight, 55); 
                         
-                        const renderHeight = Math.min(pdfHeight, 100); 
-                        
-                        if (currentY + renderHeight > doc.internal.pageSize.height - 20) { doc.addPage(); currentY = 20; }
-                        doc.addImage(imgData, 'PNG', 14, currentY, Math.min(pdfWidth, 200), renderHeight);
-                        currentY += renderHeight + 10;
+                        doc.addImage(imgData, 'PNG', 14, currentY, Math.min(pdfWidth, 180), renderHeight);
+                        currentY += renderHeight + 6;
                     }
                 }
-
-                if (currentY > doc.internal.pageSize.height - 40) { doc.addPage(); currentY = 20; }
-                doc.setFontSize(10); doc.setFont("helvetica", "bold");
-                doc.text("Tabel Rincian Analisis Tiap Butir Soal:", 14, currentY);
-                currentY += 4;
 
                 const anaCols = ["No", "Tingkat Kesukaran (P)", "Daya Pembeda (D)", "Validitas (r)", "Rekomendasi"];
                 const anaRows = res.items.map(item => [item.no, `${item.p.toFixed(2)} (${item.pCat})`, `${item.d.toFixed(2)} (${item.dCat})`, `${item.r.toFixed(2)} (${item.rCat})`, item.rec]);
@@ -2035,44 +2047,44 @@
                 doc.autoTable({
                     head: [anaCols], body: anaRows, startY: currentY, theme: 'grid',
                     headStyles: { fillColor: [14, 165, 233], textColor: [255, 255, 255], halign: 'center' },
-                    styles: { fontSize: 9, cellPadding: 3, halign: 'center' },
+                    styles: { fontSize: 8, cellPadding: 1.5, halign: 'center' },
+                    margin: { bottom: 15 },
                     didDrawPage: printFooter
                 });
 
-                let finalY = doc.lastAutoTable.finalY + 10;
+                let finalY = doc.lastAutoTable.finalY + 8;
                 const pageHeight = doc.internal.pageSize.height;
-                const pageWidth = doc.internal.pageSize.width;
                 
-                const descText = `Berdasarkan hasil analisis terhadap ${res.K} butir soal, instrumen tes ini memiliki koefisien reliabilitas sebesar ${res.reliabilitas.toFixed(2)} (${res.relCat}). Secara rinci terdapat ${dipakai} soal LAYAK DIPAKAI, ${direvisi} soal perlu DIREVISI, dan ${dibuang} soal disarankan untuk DIBUANG.`;
+                const descText = `Simpulan Analisis Evaluasi: Berdasarkan analisis terhadap ${res.K} butir soal, instrumen evaluasi memiliki koefisien reliabilitas sebesar ${res.reliabilitas.toFixed(2)} (${res.relCat}). Rekomendasi fungsional parameter: terdapat ${dipakai} butir soal Layak Dipakai, ${direvisi} butir soal perlu Direvisi/Perbaikan, dan ${dibuang} butir soal disarankan Dibuang/Diganti.`;
 
-                if (finalY + 30 > pageHeight - 20) { doc.addPage(); finalY = 20; }
+                if (finalY + 20 > pageHeight - 15) { doc.addPage(); finalY = 15; }
                 
-                doc.setFontSize(10); doc.setFont("helvetica", "bold");
+                doc.setFontSize(9); doc.setFont("helvetica", "bold");
                 doc.text("Kesimpulan Analisis:", 14, finalY);
-                finalY += 6;
+                finalY += 4;
                 doc.setFont("helvetica", "normal");
                 const splitDesc = doc.splitTextToSize(descText, pageWidth - 28);
                 doc.text(splitDesc, 14, finalY);
-                finalY += (splitDesc.length * 5) + 15;
+                finalY += (splitDesc.length * 4) + 8;
 
-                if (finalY + 45 > pageHeight - 20) { doc.addPage(); finalY = 25; } 
+                if (finalY + 30 > pageHeight - 15) { doc.addPage(); finalY = 15; } 
                 
                 const ttdColKanan = pageWidth - 80;
 
-                doc.setFontSize(10); doc.setFont("helvetica", "normal");
+                doc.setFontSize(9); doc.setFont("helvetica", "normal");
                 doc.text(id.tempatTanggal || "....................., ............................", ttdColKanan, finalY);
-                doc.text("Mengetahui,", 25, finalY + 10);
-                doc.text("Kepala Sekolah", 25, finalY + 15);
-                doc.text("Guru / Wali Kelas", ttdColKanan, finalY + 15);
+                doc.text("Mengetahui,", 25, finalY + 5);
+                doc.text("Kepala Sekolah", 25, finalY + 10);
+                doc.text("Guru / Wali Kelas", ttdColKanan, finalY + 10);
                 doc.setFont("helvetica", "bold");
-                doc.text(id.kepalaSekolah || "_________________________.", 25, finalY + 40);
-                doc.text(id.guru || "_________________________.", ttdColKanan, finalY + 40);
+                doc.text(id.kepalaSekolah || "_________________________.", 25, finalY + 25);
+                doc.text(id.guru || "_________________________.", ttdColKanan, finalY + 25);
                 doc.setFont("helvetica", "normal");
-                doc.text(`NIP. ${id.nipKepsek || "............................."}`, 25, finalY + 46);
-                doc.text(`NIP. ${id.nipGuru || "............................."}`, ttdColKanan, finalY + 46);
+                doc.text(`NIP. ${id.nipKepsek || "............................."}`, 25, finalY + 30);
+                doc.text(`NIP. ${id.nipGuru || "............................."}`, ttdColKanan, finalY + 30);
 
                 doc.save(`Laporan_Global_EduAnalisa_${id.kelas}_${id.mapel}.pdf`);
-                showToast("Laporan Global PDF berhasil diunduh.");
+                showToast("Laporan Global PDF (Pemisahan Halaman) berhasil diunduh.");
             },
 
             exportGlobalExcel() {
