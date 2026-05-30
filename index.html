@@ -1724,6 +1724,7 @@
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF('p', 'mm', 'a4');
                 const id = this.state.identitas;
+                const res = this.analysisResult;
 
                 doc.setFontSize(12); doc.setFont("helvetica", "bold");
                 doc.text("LAPORAN HASIL ANALISIS BUTIR SOAL", 105, 12, { align: 'center' });
@@ -1810,20 +1811,39 @@
                 let finalY = doc.lastAutoTable.finalY + 8;
                 const pageHeight = doc.internal.pageSize.height;
                 
-                const descText = `Berdasarkan hasil analisis terhadap ${this.analysisResult.K} butir soal, instrumen tes ini memiliki koefisien reliabilitas sebesar ${this.analysisResult.reliabilitas.toFixed(2)} (${this.analysisResult.relCat}). Secara rinci rekomendasi butir soal adalah: terdapat ${dipakai} soal LAYAK DIPAKAI, ${direvisi} soal perlu DIREVISI, dan ${dibuang} soal disarankan DIBUANG.`;
+                const descText1 = `Berdasarkan hasil perhitungan statistik secara keseluruhan terhadap ${res.K} butir soal yang diujikan, instrumen tes ini memiliki koefisien reliabilitas sebesar ${res.reliabilitas.toFixed(2)} (Kategori: ${res.relCat}). Hal ini menunjukkan seberapa konsisten dan ajeg alat ukur ini dalam mengevaluasi kemampuan siswa.`;
+                const descText2 = `Secara rinci, rekomendasi penggunaan butir soal adalah sebagai berikut:`;
+                const descText3 = `- ${dipakai} soal (${((dipakai/res.K)*100).toFixed(1)}%) dinyatakan LAYAK DIPAKAI. Soal-soal ini memiliki tingkat kesukaran yang proporsional, daya pembeda yang baik, serta tingkat validitas yang memenuhi standar pengukuran.`;
+                const descText4 = `- ${direvisi} soal (${((direvisi/res.K)*100).toFixed(1)}%) perlu DIREVISI. Soal-soal ini mungkin terlalu mudah atau terlalu sukar, atau memiliki pilihan pengecoh (distraktor) yang kurang berfungsi dengan baik sehingga daya pembedanya kurang maksimal.`;
+                const descText5 = `- ${dibuang} soal (${((dibuang/res.K)*100).toFixed(1)}%) disarankan untuk DIBUANG (DIGANTI). Soal-soal ini terdeteksi tidak valid, memiliki daya pembeda yang negatif (kelompok bawah lebih banyak menjawab benar dibanding kelompok atas), atau tingkat kesukarannya terlampau ekstrem.`;
 
-                if (finalY + 20 > pageHeight - 15) { doc.addPage(); finalY = 15; }
+                if (finalY + 40 > pageHeight - 15) { doc.addPage(); finalY = 15; }
                 
                 doc.setFontSize(9); doc.setFont("helvetica", "bold");
-                doc.text("Kesimpulan Analisis:", 14, finalY);
+                doc.text("Kesimpulan & Penjelasan Hasil Analisis:", 14, finalY);
                 finalY += 4;
                 
                 doc.setFont("helvetica", "normal");
-                const splitDesc = doc.splitTextToSize(descText, 182);
-                doc.text(splitDesc, 14, finalY);
-                finalY += (splitDesc.length * 4) + 10;
+                const splitDesc1 = doc.splitTextToSize(descText1, 182); // Lebar A4 210 - margin 28 = 182
+                doc.text(splitDesc1, 14, finalY);
+                finalY += (splitDesc1.length * 4) + 2;
 
-                if (finalY + 35 > pageHeight - 15) { doc.addPage(); finalY = 20; } 
+                doc.text(descText2, 14, finalY);
+                finalY += 4;
+
+                const splitDesc3 = doc.splitTextToSize(descText3, 178); // Indentasi 4mm
+                doc.text(splitDesc3, 18, finalY);
+                finalY += (splitDesc3.length * 4) + 1;
+
+                const splitDesc4 = doc.splitTextToSize(descText4, 178);
+                doc.text(splitDesc4, 18, finalY);
+                finalY += (splitDesc4.length * 4) + 1;
+
+                const splitDesc5 = doc.splitTextToSize(descText5, 178);
+                doc.text(splitDesc5, 18, finalY);
+                finalY += (splitDesc5.length * 4) + 6;
+
+                if (finalY + 30 > pageHeight - 15) { doc.addPage(); finalY = 15; } 
 
                 doc.setFontSize(9); doc.setFont("helvetica", "normal");
                 doc.text(id.tempatTanggal || "....................., ............................", 140, finalY);
@@ -1886,10 +1906,12 @@
                 templateExcel += `
                             <tr><td colspan="5"></td></tr>
                             <tr><td colspan="5" class="tb" style="text-align: left;">KESIMPULAN DAN PENJELASAN HASIL ANALISIS:</td></tr>
-                            <tr><td colspan="5" style="text-align: left;">Berdasarkan hasil analisis terhadap ${res.K} butir soal, instrumen tes ini memiliki koefisien reliabilitas sebesar ${res.reliabilitas.toFixed(2)} (${res.relCat}).</td></tr>
-                            <tr><td colspan="5" style="text-align: left;">Secara rinci rekomendasi butir soal adalah sebagai berikut: terdapat ${dipakai} soal LAYAK DIPAKAI (memiliki validitas dan daya pembeda yang baik), ${direvisi} soal perlu DIREVISI (pengecoh kurang berfungsi proporsional), dan ${dibuang} soal disarankan DIBUANG (tidak valid/daya pembeda jelek).</td></tr>
-                            <tr><td colspan="5"></td></tr>
-                            <tr><td colspan="5"></td></tr>
+                            <tr><td colspan="5" style="text-align: left;">Berdasarkan hasil perhitungan statistik secara keseluruhan terhadap ${res.K} butir soal yang diujikan, instrumen tes ini memiliki koefisien reliabilitas sebesar ${res.reliabilitas.toFixed(2)} (Kategori: ${res.relCat}). Hal ini menunjukkan seberapa konsisten dan ajeg alat ukur ini dalam mengevaluasi kemampuan siswa.</td></tr>
+                            <tr><td colspan="5" style="text-align: left;">Secara rinci, rekomendasi penggunaan butir soal adalah sebagai berikut:</td></tr>
+                            <tr><td colspan="5" style="text-align: left;">- ${dipakai} soal (${((dipakai/res.K)*100).toFixed(1)}%) dinyatakan LAYAK DIPAKAI. Soal-soal ini memiliki tingkat kesukaran yang proporsional, daya pembeda yang baik, serta tingkat validitas yang memenuhi standar pengukuran.</td></tr>
+                            <tr><td colspan="5" style="text-align: left;">- ${direvisi} soal (${((direvisi/res.K)*100).toFixed(1)}%) perlu DIREVISI. Soal-soal ini mungkin terlalu mudah atau terlalu sukar, atau memiliki pilihan pengecoh (distraktor) yang kurang berfungsi dengan baik sehingga daya pembedanya kurang maksimal.</td></tr>
+                            <tr><td colspan="5" style="text-align: left;">- ${dibuang} soal (${((dibuang/res.K)*100).toFixed(1)}%) disarankan untuk DIBUANG (DIGANTI). Soal-soal ini terdeteksi tidak valid, memiliki daya pembeda yang negatif (kelompok bawah lebih banyak menjawab benar dibanding kelompok atas), atau tingkat kesukarannya terlampau ekstrem.</td></tr>
+                            <tr><td colspan="5"></td></tr><tr><td colspan="5"></td></tr>
                             <tr>
                                 <td colspan="3"></td>
                                 <td colspan="2" class="tc">${id.tempatTanggal || "....................., ............................"}</td>
@@ -2055,17 +2077,37 @@
                 let finalY = doc.lastAutoTable.finalY + 8;
                 const pageHeight = doc.internal.pageSize.height;
                 
-                const descText = `Simpulan Analisis Evaluasi: Berdasarkan analisis terhadap ${res.K} butir soal, instrumen evaluasi memiliki koefisien reliabilitas sebesar ${res.reliabilitas.toFixed(2)} (${res.relCat}). Rekomendasi fungsional parameter: terdapat ${dipakai} butir soal Layak Dipakai, ${direvisi} butir soal perlu Direvisi/Perbaikan, dan ${dibuang} butir soal disarankan Dibuang/Diganti.`;
+                const descText1 = `Berdasarkan hasil perhitungan statistik secara keseluruhan terhadap ${res.K} butir soal yang diujikan, instrumen tes ini memiliki koefisien reliabilitas sebesar ${res.reliabilitas.toFixed(2)} (Kategori: ${res.relCat}). Hal ini menunjukkan seberapa konsisten dan ajeg alat ukur ini dalam mengevaluasi kemampuan siswa.`;
+                const descText2 = `Secara rinci, rekomendasi penggunaan butir soal adalah sebagai berikut:`;
+                const descText3 = `- ${dipakai} soal (${((dipakai/res.K)*100).toFixed(1)}%) dinyatakan LAYAK DIPAKAI. Soal-soal ini memiliki tingkat kesukaran yang proporsional, daya pembeda yang baik, serta tingkat validitas yang memenuhi standar pengukuran.`;
+                const descText4 = `- ${direvisi} soal (${((direvisi/res.K)*100).toFixed(1)}%) perlu DIREVISI. Soal-soal ini mungkin terlalu mudah atau terlalu sukar, atau memiliki pilihan pengecoh (distraktor) yang kurang berfungsi dengan baik sehingga daya pembedanya kurang maksimal.`;
+                const descText5 = `- ${dibuang} soal (${((dibuang/res.K)*100).toFixed(1)}%) disarankan untuk DIBUANG (DIGANTI). Soal-soal ini terdeteksi tidak valid, memiliki daya pembeda yang negatif (kelompok bawah lebih banyak menjawab benar dibanding kelompok atas), atau tingkat kesukarannya terlampau ekstrem.`;
 
-                if (finalY + 20 > pageHeight - 15) { doc.addPage(); finalY = 15; }
+                if (finalY + 40 > pageHeight - 15) { doc.addPage(); finalY = 15; }
                 
                 doc.setFontSize(9); doc.setFont("helvetica", "bold");
-                doc.text("Kesimpulan Analisis:", 14, finalY);
+                doc.text("Kesimpulan & Penjelasan Hasil Analisis:", 14, finalY);
                 finalY += 4;
                 doc.setFont("helvetica", "normal");
-                const splitDesc = doc.splitTextToSize(descText, pageWidth - 28);
-                doc.text(splitDesc, 14, finalY);
-                finalY += (splitDesc.length * 4) + 8;
+                
+                const splitDesc1 = doc.splitTextToSize(descText1, pageWidth - 28);
+                doc.text(splitDesc1, 14, finalY);
+                finalY += (splitDesc1.length * 4) + 2;
+
+                doc.text(descText2, 14, finalY);
+                finalY += 4;
+
+                const splitDesc3 = doc.splitTextToSize(descText3, pageWidth - 32);
+                doc.text(splitDesc3, 18, finalY);
+                finalY += (splitDesc3.length * 4) + 1;
+
+                const splitDesc4 = doc.splitTextToSize(descText4, pageWidth - 32);
+                doc.text(splitDesc4, 18, finalY);
+                finalY += (splitDesc4.length * 4) + 1;
+
+                const splitDesc5 = doc.splitTextToSize(descText5, pageWidth - 32);
+                doc.text(splitDesc5, 18, finalY);
+                finalY += (splitDesc5.length * 4) + 6;
 
                 if (finalY + 30 > pageHeight - 15) { doc.addPage(); finalY = 15; } 
                 
@@ -2185,6 +2227,13 @@
                 });
 
                 templateExcel += `
+                            <tr><td colspan="${maxCols}"></td></tr>
+                            <tr><td colspan="${maxCols}" class="tb" style="text-align: left;">KESIMPULAN DAN PENJELASAN HASIL ANALISIS:</td></tr>
+                            <tr><td colspan="${maxCols}" style="text-align: left;">Berdasarkan hasil perhitungan statistik secara keseluruhan terhadap ${res.K} butir soal yang diujikan, instrumen tes ini memiliki koefisien reliabilitas sebesar ${res.reliabilitas.toFixed(2)} (Kategori: ${res.relCat}). Hal ini menunjukkan seberapa konsisten dan ajeg alat ukur ini dalam mengevaluasi kemampuan siswa.</td></tr>
+                            <tr><td colspan="${maxCols}" style="text-align: left;">Secara rinci, rekomendasi penggunaan butir soal adalah sebagai berikut:</td></tr>
+                            <tr><td colspan="${maxCols}" style="text-align: left;">- ${dipakai} soal (${((dipakai/res.K)*100).toFixed(1)}%) dinyatakan LAYAK DIPAKAI. Soal-soal ini memiliki tingkat kesukaran yang proporsional, daya pembeda yang baik, serta tingkat validitas yang memenuhi standar pengukuran.</td></tr>
+                            <tr><td colspan="${maxCols}" style="text-align: left;">- ${direvisi} soal (${((direvisi/res.K)*100).toFixed(1)}%) perlu DIREVISI. Soal-soal ini mungkin terlalu mudah atau terlalu sukar, atau memiliki pilihan pengecoh (distraktor) yang kurang berfungsi dengan baik sehingga daya pembedanya kurang maksimal.</td></tr>
+                            <tr><td colspan="${maxCols}" style="text-align: left;">- ${dibuang} soal (${((dibuang/res.K)*100).toFixed(1)}%) disarankan untuk DIBUANG (DIGANTI). Soal-soal ini terdeteksi tidak valid, memiliki daya pembeda yang negatif (kelompok bawah lebih banyak menjawab benar dibanding kelompok atas), atau tingkat kesukarannya terlampau ekstrem.</td></tr>
                             <tr><td colspan="${maxCols}"></td></tr><tr><td colspan="${maxCols}"></td></tr>
                             <tr>
                                 <td colspan="3"></td>
