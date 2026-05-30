@@ -176,7 +176,7 @@
             
             <!-- DASHBOARD SECTION -->
             <section id="dashboard" class="tab-content active max-w-7xl mx-auto">
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8 mb-8 bg-gradient-to-r from-blue-50 to-white relative overflow-hidden">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8 mb-6 bg-gradient-to-r from-blue-50 to-white relative overflow-hidden">
                     <div class="relative z-10">
                         <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Selamat Datang di <span class="text-primary">EduAnalisa</span> <i class="fas fa-hand-sparkles text-yellow-500 ml-1"></i></h2>
                         <p class="text-gray-600 mb-5 max-w-3xl leading-relaxed">Sistem Analisis Butir Soal Ujian berbasis web yang dirancang khusus untuk memudahkan guru dalam menganalisis soal secara otomatis.</p>
@@ -213,6 +213,23 @@
                         <div><p class="text-sm text-gray-500 font-medium">Reliabilitas Tes</p><h3 class="text-2xl font-bold text-gray-800" id="dash-reliabilitas">-</h3></div>
                     </div>
                 </div>
+
+                <!-- MENU BACKUP & RESTORE JSON -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8 mb-8 relative overflow-hidden">
+                    <div class="absolute right-0 top-0 w-32 h-32 bg-indigo-50 rounded-bl-full z-0 pointer-events-none"></div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2 relative z-10"><i class="fas fa-database text-indigo-500 mr-2"></i> Manajemen Data / Berkas JSON</h3>
+                    <p class="text-sm text-gray-600 mb-6 relative z-10 max-w-3xl">Anda dapat mencadangkan seluruh proses pengerjaan (Identitas, Kunci, dan Jawaban) ke dalam satu berkas khusus berekstensi <strong>.json</strong> ke penyimpanan Anda. Anda bisa memulihkan (Restore) file tersebut kapan saja.</p>
+                    <div class="flex flex-wrap gap-4 relative z-10">
+                        <button onclick="app.backupData()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-sm transition flex items-center text-sm">
+                            <i class="fas fa-download mr-2"></i> Backup Data (.json)
+                        </button>
+                        <label class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg shadow-sm transition flex items-center cursor-pointer text-sm">
+                            <i class="fas fa-upload mr-2"></i> Restore Data (.json)
+                            <input type="file" id="upload-restore" accept=".json" class="hidden" onchange="app.restoreData(event)">
+                        </label>
+                    </div>
+                </div>
+
             </section>
 
             <!-- IDENTITAS UJIAN SECTION -->
@@ -777,6 +794,76 @@
                 this.saveDataLocally();
                 await this.saveToSpreadsheet();
                 showToast("Data Akun berhasil tersimpan ke Spreadsheet!");
+            },
+
+            // ================== BACKUP & RESTORE JSON ==================
+            backupData() {
+                const stateToBackup = { ...this.state };
+                // Hapus data pengguna (users) agar password aman dan tidak tercopy di backup file
+                delete stateToBackup.users;
+
+                const dataStr = JSON.stringify(stateToBackup, null, 2);
+                const blob = new Blob([dataStr], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                
+                // Menghilangkan spasi dan karakter ilegal untuk nama file
+                const cleanStr = (str) => (str || 'Data').replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+                
+                const guru = cleanStr(this.state.identitas.guru);
+                const mapel = cleanStr(this.state.identitas.mapel);
+                const kelas = cleanStr(this.state.identitas.kelas);
+                const jenis = cleanStr(this.state.identitas.jenis);
+                
+                // Format DD-MM-YYYY
+                const d = new Date();
+                const tgl = `${d.getDate().toString().padStart(2,'0')}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getFullYear()}`;
+                
+                a.download = `${guru}_${mapel}_${kelas}_${jenis}_${tgl}.json`;
+                
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showToast("Data Anda (JSON) berhasil diunduh/dibackup.");
+            },
+
+            restoreData(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        
+                        // Validasi sederhana
+                        if (data && data.identitas && data.config) {
+                            
+                            // Penting: Kembalikan array 'users' agar akun tidak tertimpa/terhapus!
+                            const tempUsers = this.state.users;
+                            this.state = data;
+                            this.state.users = tempUsers;
+                            
+                            this.saveDataLocally();
+                            showToast("Restore data berhasil! Memuat ulang sistem...");
+                            
+                            // Refresh otomatis untuk memperbarui UI
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            showToast("Format file JSON tidak sesuai!", true);
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        showToast("Gagal membaca file JSON!", true);
+                    }
+                };
+                reader.readAsText(file);
+                
+                // Reset nilai input agar dapat memuat file yang sama jika diinginkan
+                event.target.value = ''; 
             },
 
             resetAllData() {
@@ -1725,6 +1812,7 @@
                 const doc = new jsPDF('p', 'mm', 'a4');
                 const id = this.state.identitas;
                 const res = this.analysisResult;
+                const pageWidth = doc.internal.pageSize.width;
 
                 doc.setFontSize(12); doc.setFont("helvetica", "bold");
                 doc.text("LAPORAN HASIL ANALISIS BUTIR SOAL", 105, 12, { align: 'center' });
@@ -1766,7 +1854,7 @@
                         const pdfWidth = doc.internal.pageSize.getWidth() - 28; 
                         const canvasRatio = canvas.width / (canvas.height || 1);
                         const pdfHeight = pdfWidth / canvasRatio; 
-                        const renderHeight = Math.min(pdfHeight, 55); // Batasi tinggi max grafik agar hemat tempat
+                        const renderHeight = Math.min(pdfHeight, 55); 
                         
                         if (currentY + renderHeight > doc.internal.pageSize.height - 15) {
                             doc.addPage();
@@ -1800,7 +1888,7 @@
                     head: [tableCol], body: tableRows, startY: currentY, theme: 'grid',
                     margin: { top: 15, bottom: 15 },
                     headStyles: { fillColor: [14, 165, 233], textColor: [255, 255, 255], halign: 'center' },
-                    styles: { fontSize: 8, cellPadding: 1.5 }, // Mode Hemat kertas
+                    styles: { fontSize: 8, cellPadding: 1.5 }, 
                     columnStyles: { 0: { halign: 'center', cellWidth: 12 }, 4: { halign: 'center', cellWidth: 25 } },
                     didDrawPage: function (data) {
                         doc.setFontSize(8); doc.setFont("helvetica", "italic");
@@ -1822,24 +1910,24 @@
                 doc.setFontSize(9); doc.setFont("helvetica", "bold");
                 doc.text("Kesimpulan & Penjelasan Hasil Analisis:", 14, finalY);
                 finalY += 4;
-                
                 doc.setFont("helvetica", "normal");
-                const splitDesc1 = doc.splitTextToSize(descText1, 182); // Lebar A4 210 - margin 28 = 182
+                
+                const splitDesc1 = doc.splitTextToSize(descText1, pageWidth - 28);
                 doc.text(splitDesc1, 14, finalY);
                 finalY += (splitDesc1.length * 4) + 2;
 
                 doc.text(descText2, 14, finalY);
                 finalY += 4;
 
-                const splitDesc3 = doc.splitTextToSize(descText3, 178); // Indentasi 4mm
+                const splitDesc3 = doc.splitTextToSize(descText3, pageWidth - 32);
                 doc.text(splitDesc3, 18, finalY);
                 finalY += (splitDesc3.length * 4) + 1;
 
-                const splitDesc4 = doc.splitTextToSize(descText4, 178);
+                const splitDesc4 = doc.splitTextToSize(descText4, pageWidth - 32);
                 doc.text(splitDesc4, 18, finalY);
                 finalY += (splitDesc4.length * 4) + 1;
 
-                const splitDesc5 = doc.splitTextToSize(descText5, 178);
+                const splitDesc5 = doc.splitTextToSize(descText5, pageWidth - 32);
                 doc.text(splitDesc5, 18, finalY);
                 finalY += (splitDesc5.length * 4) + 6;
 
@@ -1978,7 +2066,7 @@
                 const kunciCols = ["No", "Jenis Soal", "Kunci / Bobot", "No", "Jenis Soal", "Kunci / Bobot"];
                 const kunciRows = [];
                 const keys = this.state.kunci;
-                const mid = Math.ceil(keys.length / 2); // Membagi data menjadi 2 kolom
+                const mid = Math.ceil(keys.length / 2); 
                 
                 for (let i = 0; i < mid; i++) {
                     const k1 = keys[i];
@@ -2107,7 +2195,7 @@
 
                 const splitDesc5 = doc.splitTextToSize(descText5, pageWidth - 32);
                 doc.text(splitDesc5, 18, finalY);
-                finalY += (splitDesc5.length * 4) + 6;
+                finalY += (splitDesc5.length * 4) + 8;
 
                 if (finalY + 30 > pageHeight - 15) { doc.addPage(); finalY = 15; } 
                 
@@ -2212,7 +2300,7 @@
                 templateExcel += `
                             <tr><td colspan="5" class="section-title">4. HASIL ANALISIS BUTIR SOAL</td></tr>
                             <tr><td colspan="5" class="tb">Reliabilitas Tes: ${res.reliabilitas.toFixed(2)} (${res.relCat})</td></tr>
-                            <tr><td colspan="5" class="tb">Soal Layak Dipakai: ${dipakai} | Direvisi: ${direvisi} | Dibuang: ${dibuang}</td></tr>
+                            <tr><td colspan="5" class="tb">Total Soal Valid: ${res.validCount} dari ${res.K} soal</td></tr>
                             <tr><td colspan="5"></td></tr>
                             <tr>
                                 <th class="ba bg tc vm">NO</th>
