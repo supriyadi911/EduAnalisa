@@ -2052,7 +2052,7 @@
                     doc.text(title, pageWidth / 2, 12, { align: 'center' });
                     doc.setFontSize(10); doc.setFont("helvetica", "normal");
                     doc.text(`${(id.sekolah || 'SEKOLAH').toUpperCase()} - TAHUN AJARAN ${id.tahun || '-'}`, pageWidth / 2, 17, { align: 'center' });
-                    doc.text("Laporan Global Hasil Analisis dan Penilaian Evaluasi Pembelajaran", pageWidth / 2, 22, { align: 'center' });
+                    doc.text(`Mata Pelajaran: ${id.mapel || '-'} | Kelas: ${id.kelas || '-'} | Semester: ${id.semester || '-'}`, pageWidth / 2, 22, { align: 'center' });
                     doc.setLineWidth(0.5); doc.line(14, 25, pageWidth - 14, 25);
                 };
 
